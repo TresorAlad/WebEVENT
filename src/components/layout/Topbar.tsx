@@ -1,22 +1,27 @@
-import { useState } from 'react'
-import { useLocation } from 'react-router-dom'
-import { Search, Bell, Moon, Sun, ChevronDown } from 'lucide-react'
-
-const pageTitles: Record<string, string> = {
-  '/dashboard':  'Global View',
-  '/events':     'EventHub Management',
-  '/users':      'EventHub Management',
-  '/analytics':  'EventHub Management',
-  '/financials': 'EventHub Management',
-  '/settings':   'EventHub Management',
-}
+import { useState, useEffect } from 'react'
+import { Search, Bell, Moon, Sun, ChevronDown, User, Settings, LogOut, MessageSquare } from 'lucide-react'
+import { useNotification } from '../ui/NotificationProvider'
+import { useNavigate } from 'react-router-dom'
 
 export default function Topbar() {
-  const location = useLocation()
+  const { notify } = useNotification()
+  const navigate = useNavigate()
   const [dark, setDark] = useState(false)
   const [search, setSearch] = useState('')
+  const [showNotifications, setShowNotifications] = useState(false)
+  const [showProfileMenu, setShowProfileMenu] = useState(false)
 
-  const pageTitle = pageTitles[location.pathname] ?? 'EventHub'
+  // Sync Dark Mode with Body class
+  useEffect(() => {
+    if (dark) document.body.classList.add('dark-mode')
+    else document.body.classList.remove('dark-mode')
+  }, [dark])
+
+  const handleSignOut = () => {
+    localStorage.removeItem('eh_auth')
+    notify('Signed out successfully', 'info')
+    navigate('/login')
+  }
 
   return (
     <header className="topbar">
@@ -27,50 +32,103 @@ export default function Topbar() {
           id="topbar-search"
           type="text"
           className="topbar-search-input"
-          placeholder="Search events, users, or logs..."
+          placeholder="Global search events, users..."
           value={search}
           onChange={e => setSearch(e.target.value)}
+          onKeyDown={(e) => {
+             if(e.key === 'Enter' && search) {
+                notify(`Global search for "${search}" triggered.`, 'info')
+             }
+          }}
         />
       </div>
 
       {/* Center tabs */}
       <div className="topbar-tabs">
-        <button className="topbar-tab active">Global View</button>
-        <button className="topbar-tab">Logs</button>
+        <button className="topbar-tab active">Console</button>
+        <button className="topbar-tab" onClick={() => notify('Activity Logs coming soon in v2.0', 'info')}>Log History</button>
       </div>
 
       {/* Right actions */}
       <div className="topbar-actions">
         {/* Notifications */}
-        <button className="topbar-icon-btn" id="topbar-notifications" aria-label="Notifications">
-          <Bell size={18} />
-          <span className="topbar-notif-badge">3</span>
-        </button>
+        <div className="dropdown">
+          <button 
+            className={`topbar-icon-btn ${showNotifications ? 'active' : ''}`} 
+            onClick={() => setShowNotifications(!showNotifications)}
+          >
+            <Bell size={18} />
+            <span className="topbar-notif-badge">3</span>
+          </button>
+          {showNotifications && (
+            <div className="dropdown-menu" style={{ width: 300, right: 0 }}>
+              <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-light)' }}>
+                <p className="font-bold text-sm">Notifications</p>
+              </div>
+              <div className="notif-item">
+                <div className="notif-icon success"><CheckCircle size={14} /></div>
+                <div>
+                    <p className="text-xs font-semibold">System Update Successful</p>
+                    <p className="text-xs text-muted">Version 1.2.5 has been deployed.</p>
+                </div>
+              </div>
+              <div className="notif-item">
+                <div className="notif-icon warning"><AlertTriangle size={14} /></div>
+                <div>
+                    <p className="text-xs font-semibold">Security Alert</p>
+                    <p className="text-xs text-muted">Unusual activity from Lomé.</p>
+                </div>
+              </div>
+              <button className="dropdown-item" style={{ justifyContent: 'center', fontWeight: 600, color: 'var(--primary)' }}>
+                Mark all as read
+              </button>
+            </div>
+          )}
+        </div>
 
         {/* Dark mode toggle */}
         <button
           className="topbar-icon-btn"
-          id="topbar-dark-toggle"
-          aria-label="Toggle dark mode"
           onClick={() => setDark(!dark)}
+          title="Toggle Dark Mode"
         >
-          {dark ? <Sun size={18} /> : <Moon size={18} />}
+          {dark ? <Sun size={18} className="text-warning" /> : <Moon size={18} />}
         </button>
 
-        {/* Admin profile */}
-        <div className="topbar-profile">
-          <img
-            src="https://i.pravatar.cc/150?img=52"
-            alt="Admin"
-            className="avatar avatar-md"
-          />
-          <div className="topbar-profile-info">
-            <span className="topbar-profile-name">E. Kodjo</span>
-            <span className="topbar-profile-role">ADMIN</span>
+        {/* Profile */}
+        <div className="dropdown">
+          <div className="topbar-profile" onClick={() => setShowProfileMenu(!showProfileMenu)}>
+            <img src="https://i.pravatar.cc/150?img=52" alt="Admin" className="avatar avatar-md" />
+            <div className="topbar-profile-info">
+              <span className="topbar-profile-name">E. Kodjo</span>
+              <span className="topbar-profile-role">SUPER ADMIN</span>
+            </div>
+            <ChevronDown size={14} className={`topbar-profile-arrow ${showProfileMenu ? 'rotate' : ''}`} />
           </div>
-          <ChevronDown size={14} className="topbar-profile-arrow" />
+          {showProfileMenu && (
+            <div className="dropdown-menu" style={{ right: 0, minWidth: 200 }}>
+              <button className="dropdown-item" onClick={() => navigate('/profile')}>
+                <User size={14} /> Account Profile
+              </button>
+              <button className="dropdown-item" onClick={() => navigate('/settings')}>
+                <Settings size={14} /> System Settings
+              </button>
+              <button className="dropdown-item" onClick={() => notify('Security center active', 'info')}>
+                <Shield size={14} /> Security Center
+              </button>
+              <div className="divider" />
+              <button className="dropdown-item danger" onClick={handleSignOut}>
+                <LogOut size={14} /> Sign Out
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </header>
   )
 }
+
+// Small helper since I used it above
+const CheckCircle = ({ size }: { size: number }) => <span style={{ color: 'var(--success)' }}><Bell size={size} /></span>
+const AlertTriangle = ({ size }: { size: number }) => <span style={{ color: 'var(--warning)' }}><Bell size={size} /></span>
+const Shield = ({ size }: { size: number }) => <span style={{ color: 'var(--info)' }}><Bell size={size} /></span>

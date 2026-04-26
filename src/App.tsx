@@ -6,6 +6,7 @@ import Users from './pages/Users'
 import Analytics from './pages/Analytics'
 import Financials from './pages/Financials'
 import Settings from './pages/Settings'
+import Profile from './pages/Profile'
 import Login from './pages/Login'
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -36,6 +37,7 @@ function App() {
         <Route path="analytics" element={<Analytics />} />
         <Route path="financials" element={<Financials />} />
         <Route path="settings" element={<Settings />} />
+        <Route path="profile" element={<Profile />} />
       </Route>
 
       {/* Fallback */}
