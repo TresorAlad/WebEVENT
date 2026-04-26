@@ -1,0 +1,47 @@
+import { Routes, Route, Navigate } from 'react-router-dom'
+import MainLayout from './components/layout/MainLayout'
+import Dashboard from './pages/Dashboard'
+import Events from './pages/Events'
+import Users from './pages/Users'
+import Analytics from './pages/Analytics'
+import Financials from './pages/Financials'
+import Settings from './pages/Settings'
+import Login from './pages/Login'
+
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const isAuthenticated = localStorage.getItem('eh_auth') === 'true'
+  if (!isAuthenticated) return <Navigate to="/login" replace />
+  return <>{children}</>
+}
+
+function App() {
+  return (
+    <Routes>
+      {/* Auth Route */}
+      <Route path="/login" element={<Login />} />
+
+      {/* App Routes */}
+      <Route
+        path="/"
+        element={
+          <ProtectedRoute>
+            <MainLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<Navigate to="/dashboard" replace />} />
+        <Route path="dashboard" element={<Dashboard />} />
+        <Route path="events" element={<Events />} />
+        <Route path="users" element={<Users />} />
+        <Route path="analytics" element={<Analytics />} />
+        <Route path="financials" element={<Financials />} />
+        <Route path="settings" element={<Settings />} />
+      </Route>
+
+      {/* Fallback */}
+      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+    </Routes>
+  )
+}
+
+export default App
