@@ -2,16 +2,34 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Lock, Mail, ArrowRight } from 'lucide-react'
 
+import { useAuth } from '../hooks/useAuth'
+
 export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const navigate = useNavigate()
+  const { login, user } = useAuth()
+
+  if (user) {
+    navigate('/dashboard')
+    return null
+  }
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault()
     // Mock login
     localStorage.setItem('eh_auth', 'true')
     navigate('/dashboard')
+  }
+
+  const handleGoogleLogin = async () => {
+    try {
+      await login()
+      navigate('/dashboard')
+    } catch (error) {
+      console.error(error)
+      alert('Google login failed')
+    }
   }
 
   return (
@@ -59,6 +77,19 @@ export default function Login() {
             <ArrowRight size={16} />
           </button>
         </form>
+
+        <div className="divider" style={{ margin: '20px 0', textAlign: 'center', color: '#889' }}>
+          <span>OR</span>
+        </div>
+
+        <button 
+          onClick={handleGoogleLogin}
+          className="btn btn-outline login-btn" 
+          style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}
+        >
+          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" alt="Google" />
+          Sign in with Google
+        </button>
 
         <div className="login-footer">
           <p>© 2026 EventHub Togo. All rights reserved.</p>

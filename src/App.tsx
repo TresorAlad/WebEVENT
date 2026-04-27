@@ -9,9 +9,14 @@ import Settings from './pages/Settings'
 import Profile from './pages/Profile'
 import Login from './pages/Login'
 
+import { useAuth } from './hooks/useAuth'
+
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const isAuthenticated = localStorage.getItem('eh_auth') === 'true'
-  if (!isAuthenticated) return <Navigate to="/login" replace />
+  const { user, loading } = useAuth()
+  
+  if (loading) return <div>Loading...</div>
+  if (!user) return <Navigate to="/login" replace />
+  
   return <>{children}</>
 }
 

@@ -3,11 +3,12 @@ import {
   LayoutDashboard, Calendar, Users, BarChart2,
   DollarSign, Settings, HelpCircle, LogOut, Plus,
 } from 'lucide-react'
+import { useAuth } from '../../hooks/useAuth'
 
 const navItems = [
   { to: '/dashboard',  icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/events',     icon: Calendar,        label: 'Events' },
-  { to: '/users',      icon: Users,           label: 'User Management' },
+  { to: '/users',      icon: Users,           label: 'Admin Management' },
   { to: '/analytics',  icon: BarChart2,       label: 'Post Analytics' },
   { to: '/financials', icon: DollarSign,      label: 'Financials' },
   { to: '/settings',   icon: Settings,        label: 'System Settings' },
@@ -15,9 +16,10 @@ const navItems = [
 
 export default function Sidebar() {
   const navigate = useNavigate()
+  const { dbUser, logout } = useAuth()
 
-  const handleSignOut = () => {
-    localStorage.removeItem('eh_auth')
+  const handleSignOut = async () => {
+    await logout()
     navigate('/login')
   }
 

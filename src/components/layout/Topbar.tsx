@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
-import { Search, Bell, Moon, Sun, ChevronDown, User, Settings, LogOut, MessageSquare } from 'lucide-react'
+import { Search, Bell, Moon, Sun, ChevronDown, User, Settings, LogOut } from 'lucide-react'
 import { useNotification } from '../ui/NotificationProvider'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../../hooks/useAuth'
 
 export default function Topbar() {
   const { notify } = useNotification()
+  const { user, dbUser, logout } = useAuth()
   const navigate = useNavigate()
   const [dark, setDark] = useState(false)
   const [search, setSearch] = useState('')
@@ -17,8 +19,8 @@ export default function Topbar() {
     else document.body.classList.remove('dark-mode')
   }, [dark])
 
-  const handleSignOut = () => {
-    localStorage.removeItem('eh_auth')
+  const handleSignOut = async () => {
+    await logout()
     notify('Signed out successfully', 'info')
     navigate('/login')
   }
@@ -32,7 +34,7 @@ export default function Topbar() {
           id="topbar-search"
           type="text"
           className="topbar-search-input"
-          placeholder="Global search events, users..."
+          placeholder="Global search events, admins..."
           value={search}
           onChange={e => setSearch(e.target.value)}
           onKeyDown={(e) => {
@@ -98,9 +100,9 @@ export default function Topbar() {
         {/* Profile */}
         <div className="dropdown">
           <div className="topbar-profile" onClick={() => setShowProfileMenu(!showProfileMenu)}>
-            <img src="https://i.pravatar.cc/150?img=52" alt="Admin" className="avatar avatar-md" />
+            <img src={dbUser?.avatar || user?.photoURL || "https://i.pravatar.cc/150?img=52"} alt="Admin" className="avatar avatar-md" />
             <div className="topbar-profile-info">
-              <span className="topbar-profile-name">E. Kodjo</span>
+              <span className="topbar-profile-name">{dbUser?.name?.split(' ')[0] || user?.displayName?.split(' ')[0] || 'Admin'}</span>
               <span className="topbar-profile-role">SUPER ADMIN</span>
             </div>
             <ChevronDown size={14} className={`topbar-profile-arrow ${showProfileMenu ? 'rotate' : ''}`} />

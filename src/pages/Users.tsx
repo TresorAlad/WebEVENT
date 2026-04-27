@@ -5,10 +5,10 @@ import type { User } from '../types'
 import Modal from '../components/ui/Modal'
 
 const PAGE_SIZE = 5
-type TabFilter = 'All Users' | 'Organizers' | 'Suspended'
+type TabFilter = 'All Accounts' | 'Organizers' | 'Suspended'
 
 export default function Users() {
-  const [tab, setTab] = useState<TabFilter>('All Users')
+  const [tab, setTab] = useState<TabFilter>('All Accounts')
   const [page, setPage] = useState(1)
   const [openMenu, setOpenMenu] = useState<string | null>(null)
   const [searchVal, setSearchVal] = useState('')
@@ -17,7 +17,7 @@ export default function Users() {
   const filtered = useMemo(() => {
     return mockUsers.filter(u => {
       const matchTab =
-        tab === 'All Users' ? true :
+        tab === 'All Accounts' ? true :
         tab === 'Organizers' ? u.role === 'ORGANIZER' :
         u.status === 'Suspended'
       const matchSearch =
@@ -43,12 +43,12 @@ export default function Users() {
       {/* Header */}
       <div className="page-header">
         <div className="page-header-info">
-          <h1>User Management</h1>
-          <p>Oversee and manage your community of organizers and attendees.</p>
+          <h1>Account Management</h1>
+          <p>Oversee and manage your community of organizers and staff.</p>
         </div>
         <div className="page-header-actions">
           <div className="tabs">
-            {(['All Users', 'Organizers', 'Suspended'] as TabFilter[]).map(t => (
+            {(['All Accounts', 'Organizers', 'Suspended'] as TabFilter[]).map(t => (
               <button
                 key={t}
                 className={`tab-btn${tab === t ? ' active' : ''}`}
@@ -71,7 +71,7 @@ export default function Users() {
           <table>
             <thead>
               <tr>
-                <th>User</th>
+                <th>Account</th>
                 <th>Email Address</th>
                 <th>Role</th>
                 <th>Status</th>
@@ -210,7 +210,7 @@ export default function Users() {
             </div>
           </div>
           <div>
-            <p className="stat-card-label">Suspended Users</p>
+            <p className="stat-card-label">Suspended Accounts</p>
             <p className="stat-card-value">0{mockStats.suspendedUsers}</p>
           </div>
         </div>
@@ -220,7 +220,7 @@ export default function Users() {
       <Modal
         isOpen={!!selectedUser}
         onClose={() => setSelectedUser(null)}
-        title="User Profile Details"
+        title="Account Profile Details"
         size="md"
       >
         {selectedUser && (
@@ -247,7 +247,7 @@ export default function Users() {
                 <p className="font-semibold">{selectedUser.joinedAt}</p>
               </div>
               <div className="detail-group">
-                <p className="label">User ID</p>
+                <p className="label">Account ID</p>
                 <p className="font-semibold">{selectedUser.id}</p>
               </div>
             </div>
