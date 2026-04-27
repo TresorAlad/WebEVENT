@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { Search, SlidersHorizontal, Plus, MoreVertical, MapPin, Users, CheckCircle, Clock, Flag, Archive, Calendar as CalendarIcon, Upload, X, ShieldAlert, BadgeCheck } from 'lucide-react'
+import { Search, SlidersHorizontal, Plus, MoreVertical, MapPin, Users, CheckCircle, Clock, Flag, Archive, Calendar as CalendarIcon, Upload, ShieldAlert, BadgeCheck } from 'lucide-react'
 import { mockEvents } from '../services/mockData'
 import type { EventStatus, Event } from '../types'
 import Modal from '../components/ui/Modal'
@@ -106,11 +106,19 @@ export default function Events() {
                 )}
                 <div className="event-card-img-badges">
                   <span className={`badge ${sc.cls}`}>{sc.label}</span>
+                  <span className={`badge ${event.participationMode === 'Online' ? 'badge-purple' : 'badge-indigo'}`}>
+                    {event.participationMode === 'Online' ? 'ONLINE' : 'IN-PERSON'}
+                  </span>
                 </div>
               </div>
               <div className="event-card-body">
                 <div className="flex justify-between items-start mb-2">
-                  <p className="event-card-category">{event.category}</p>
+                  <div className="flex gap-2">
+                    <p className="event-card-category">{event.category}</p>
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${event.registrationMode === 'External' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                      {event.registrationMode === 'External' ? 'External' : 'Internal'}
+                    </span>
+                  </div>
                   <div className="dropdown" onClick={e => e.stopPropagation()}>
                     <button className="btn btn-ghost btn-icon btn-sm" onClick={() => setOpenMenu(openMenu === event.id ? null : event.id)}>
                       <MoreVertical size={14} />
@@ -130,7 +138,7 @@ export default function Events() {
                 <div className="event-card-meta mt-4">
                   <div className="event-meta-item">
                     <MapPin size={12} />
-                    <span>{event.location}</span>
+                    <span className="truncate max-w-[100px]">{event.location}</span>
                   </div>
                   <div className="event-meta-item">
                     <Users size={12} />

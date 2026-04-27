@@ -20,8 +20,11 @@ export interface Event {
   category: string
   status: EventStatus
   attendees: number
+  registrationMode: 'Internal' | 'External'
+  participationMode: 'Online' | 'In-person'
   image?: string
   flagReason?: string
+  externalLink?: string
 }
 
 // ── Activity ──

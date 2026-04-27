@@ -1955,4 +1955,16 @@ tbody tr:hover { background: var(--primary-50); }
 .event-banner-img { width: 100%; height: 100%; object-fit: cover; }
 .banner-badge { position: absolute; top: 20px; right: 20px; padding: 6px 12px; font-weight: 800; box-shadow: var(--shadow-lg); }
 .info-box { background: var(--bg); padding: 16px; border-radius: var(--radius-lg); display: flex; align-items: center; gap: 16px; }
-.warning-panel { background: rgba(230, 57, 70, 0.08); border: 1px solid rgba(230, 57, 70, 0.2); padding: 20px; border-radius: var(--radius-lg); display: flex; gap: 16px; }
+/* ── New Event Badges & Tags ── */
+.badge-purple { background: var(--purple-bg); color: var(--purple); }
+.badge-indigo { background: var(--info-bg); color: var(--info); }
+.event-mode-badge { position: absolute; top: 12px; left: 12px; display: flex; gap: 6px; }
+.event-card-img-badges { position: absolute; top: 12px; right: 12px; display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
+.reg-mode-tag { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+.text-warning { color: var(--warning); }
+.text-success { color: var(--success); }
+
+/* ── Dashboard Enhancements ── */
+.registration-bar-mini { height: 6px; background: #eaeff5; border-radius: 3px; display: flex; overflow: hidden; }
+.bar-internal { background: var(--success); height: 100%; transition: width 1s var(--ease); }
+.bar-external { background: var(--warning); height: 100%; transition: width 1s var(--ease); }
