@@ -7,7 +7,6 @@ import {
 } from 'lucide-react'
 import { getDashboardStats, getTransactions, getRevenueGrowth } from '../services/api'
 import type { Transaction, DashboardStats, ChartDataPoint } from '../types'
-import Skeleton from '../components/ui/Skeleton'
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {

@@ -16,7 +16,7 @@ const navItems = [
 
 export default function Sidebar() {
   const navigate = useNavigate()
-  const { dbUser, logout } = useAuth()
+  const { logout } = useAuth()
 
   const handleSignOut = async () => {
     await logout()

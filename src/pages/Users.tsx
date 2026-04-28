@@ -15,7 +15,7 @@ export default function Users() {
   const [tab, setTab] = useState<TabFilter>('All Accounts')
   const [page, setPage] = useState(1)
   const [openMenu, setOpenMenu] = useState<string | null>(null)
-  const [searchVal, setSearchVal] = useState('')
+  const [searchVal] = useState('')
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
 
   useEffect(() => {

@@ -1,4 +1,4 @@
-import { Save, Globe, Mail, Shield, Palette, Smartphone } from 'lucide-react'
+import { Save, Globe, Shield, Palette } from 'lucide-react'
 import { useNotification } from '../components/ui/NotificationProvider'
 import { useState } from 'react'
 
