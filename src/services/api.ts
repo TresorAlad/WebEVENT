@@ -26,6 +26,36 @@ export const getAllEvents = async () => {
   return response.data;
 };
 
+export const getDashboardStats = async () => {
+  const response = await api.get('/admin/stats');
+  return response.data;
+};
+
+export const getUserGrowth = async () => {
+  const response = await api.get('/admin/user-growth');
+  return response.data;
+};
+
+export const getActivities = async () => {
+  const response = await api.get('/admin/activity');
+  return response.data;
+};
+
+export const getUsers = async () => {
+  const response = await api.get('/admin/users');
+  return response.data;
+};
+
+export const getTransactions = async () => {
+  const response = await api.get('/admin/transactions');
+  return response.data;
+};
+
+export const getRevenueGrowth = async () => {
+  const response = await api.get('/admin/revenue-growth');
+  return response.data;
+};
+
 export const updateProfile = async (profileData: { name: string; avatar: string; bio: string }) => {
   const response = await api.put('/auth/profile', profileData);
   return response.data;

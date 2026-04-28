@@ -1,9 +1,10 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Search, SlidersHorizontal, Plus, MoreVertical, MapPin, Users, CheckCircle, Clock, Flag, Archive, Calendar as CalendarIcon, Upload, ShieldAlert, BadgeCheck } from 'lucide-react'
-import { mockEvents } from '../services/mockData'
+import { getAllEvents } from '../services/api'
 import type { EventStatus, Event } from '../types'
 import Modal from '../components/ui/Modal'
 import { useNotification } from '../components/ui/NotificationProvider'
+import Skeleton from '../components/ui/Skeleton'
 
 const tabs: { label: string; status: EventStatus | 'All' }[] = [
   { label: 'All Events', status: 'All' },
@@ -23,20 +24,42 @@ const statusConfig: Record<EventStatus, { label: string; cls: string }> = {
 
 export default function Events() {
   const { notify } = useNotification()
+  const [events, setEvents] = useState<Event[]>([])
+  const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<EventStatus | 'All'>('All')
   const [search, setSearch] = useState('')
   const [openMenu, setOpenMenu] = useState<string | null>(null)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null)
 
+  useEffect(() => {
+    fetchEvents()
+  }, [])
+
+  const fetchEvents = async () => {
+    try {
+      const data = await getAllEvents()
+      // Mapping server fields (like organizer.name) to frontend Event type if needed
+      setEvents(data.map((e: any) => ({
+        ...e,
+        organizer: e.organizer?.name || 'Unknown Organizer',
+        attendees: e._count?.participants || 0
+      })))
+    } catch (error) {
+      console.error('Error fetching events:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const filtered = useMemo(() => {
-    return mockEvents.filter((ev: Event) => {
+    return events.filter((ev: Event) => {
       const matchTab = activeTab === 'All' || ev.status === activeTab
       const matchSearch = ev.title.toLowerCase().includes(search.toLowerCase()) ||
                           ev.organizer.toLowerCase().includes(search.toLowerCase())
       return matchTab && matchSearch
     })
-  }, [activeTab, search])
+  }, [events, activeTab, search])
 
   const handleAction = (e: React.MouseEvent, action: string) => {
     e.stopPropagation()
@@ -94,10 +117,21 @@ export default function Events() {
 
       {/* Grid */}
       <div className="events-grid">
-        {filtered.map((event: Event) => {
-          const sc = statusConfig[event.status] || { label: 'UNKNOWN', cls: 'badge-neutral' }
-          return (
-            <div key={event.id} className="event-card" onClick={() => setSelectedEvent(event)}>
+        {loading ? (
+          Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="event-card">
+              <Skeleton height={200} />
+              <div className="p-4">
+                <Skeleton width="60%" height={24} className="mb-2" />
+                <Skeleton width="40%" height={16} />
+              </div>
+            </div>
+          ))
+        ) : filtered.length > 0 ? (
+          filtered.map((event: Event) => {
+            const sc = statusConfig[event.status] || { label: 'UNKNOWN', cls: 'badge-neutral' }
+            return (
+              <div key={event.id} className="event-card" onClick={() => setSelectedEvent(event)}>
               <div className="event-card-img-wrap">
                 {event.image ? (
                   <img src={event.image} alt={event.title} className="event-card-img" />
@@ -148,7 +182,12 @@ export default function Events() {
               </div>
             </div>
           )
-        })}
+        })
+        ) : (
+          <div className="col-span-full py-20 text-center">
+            <p className="text-muted">No events found matching your criteria.</p>
+          </div>
+        )}
       </div>
 
       {/* Create Modal */}

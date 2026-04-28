@@ -6,8 +6,8 @@ import {
   Download, TrendingUp, Calendar, AlertTriangle,
   CheckCircle, Megaphone, UserPlus, ArrowUpRight, Clock,
 } from 'lucide-react'
-import { mockStats, mockUserGrowth, mockActivity, mockEvents } from '../services/mockData'
-import type { ActivityItem } from '../types'
+import { getDashboardStats, getUserGrowth, getActivities, getAllEvents } from '../services/api'
+import type { DashboardStats, ChartDataPoint, ActivityItem, Event } from '../types'
 import Skeleton from '../components/ui/Skeleton'
 
 // ── Custom Bar Shape (rounded top) ──
@@ -23,14 +23,12 @@ const RoundedBar = (props: any) => {
   )
 }
 
-const activityConfig: Record<ActivityItem['type'], { Icon: any; color: string; bg: string }> = {
+const activityConfig: Record<string, { Icon: any; color: string; bg: string }> = {
   organizer: { Icon: UserPlus,     color: '#2dc653', bg: '#e6f9ed' },
   event:     { Icon: CheckCircle,  color: '#2dc653', bg: '#e6f9ed' },
   warning:   { Icon: AlertTriangle,color: '#e63946', bg: '#fdecea' },
   campaign:  { Icon: Megaphone,    color: '#7b2d8b', bg: '#f5edf7' },
 }
-
-const peakIndex = mockUserGrowth.findIndex(d => d.month === 'JUL')
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
@@ -47,14 +45,34 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 export default function Dashboard() {
   const [activeChartIdx, setActiveChartIdx] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
-  const liveEvents = mockEvents.filter(e => e.status === 'Live').slice(0, 2)
+  const [stats, setStats] = useState<DashboardStats | null>(null)
+  const [userGrowth, setUserGrowth] = useState<ChartDataPoint[]>([])
+  const [activities, setActivities] = useState<ActivityItem[]>([])
+  const [liveEvents, setLiveEvents] = useState<Event[]>([])
 
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 800)
-    return () => clearTimeout(timer)
-  }, [])
+    const fetchData = async () => {
+      try {
+        const [statsData, growthData, activitiesData, eventsData] = await Promise.all([
+          getDashboardStats(),
+          getUserGrowth(),
+          getActivities(),
+          getAllEvents()
+        ]);
+        setStats(statsData);
+        setUserGrowth(growthData);
+        setActivities(activitiesData);
+        setLiveEvents(eventsData.filter((e: any) => e.status === 'Live').slice(0, 2));
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
-  if (loading) {
+  if (loading || !stats) {
     return (
       <div className="dashboard">
         <div className="page-header">
@@ -74,6 +92,10 @@ export default function Dashboard() {
       </div>
     )
   }
+
+  const peakIndex = userGrowth.reduce((maxIdx, current, idx, arr) => 
+    current.value > arr[maxIdx].value ? idx : maxIdx, 0
+  );
 
   return (
     <div className="dashboard">
@@ -98,19 +120,19 @@ export default function Dashboard() {
             </div>
             <span className="stat-pill up">
               <TrendingUp size={11} />
-              +{mockStats.growth}%
+              +{stats.growth}%
             </span>
           </div>
           <p className="stat-card-label">TOTAL EVENTS MANAGED</p>
-          <p className="stat-card-value">{mockStats.totalEvents.toLocaleString()}</p>
+          <p className="stat-card-value">{stats.totalEvents.toLocaleString()}</p>
           <div className="stat-card-sub">
             <div className="stat-sub-item">
               <span className="stat-sub-label">ACTIVE</span>
-              <span className="stat-sub-value">{mockStats.activeEvents}</span>
+              <span className="stat-sub-value">{stats.activeEvents}</span>
             </div>
             <div className="stat-sub-item">
               <span className="stat-sub-label">PENDING</span>
-              <span className="stat-sub-value">{mockStats.pendingEvents}</span>
+              <span className="stat-sub-value">{stats.pendingEvents}</span>
             </div>
           </div>
         </div>
@@ -123,12 +145,12 @@ export default function Dashboard() {
                 Monthly acquisition trends in Lomé
               </p>
             </div>
-            <span className="badge badge-primary">12 Months</span>
+            <span className="badge badge-primary">Recent Months</span>
           </div>
           <div className="user-growth-chart">
             <ResponsiveContainer width="100%" height={160}>
               <BarChart
-                data={mockUserGrowth}
+                data={userGrowth}
                 barCategoryGap="20%"
                 onMouseLeave={() => setActiveChartIdx(null)}
               >
@@ -145,7 +167,7 @@ export default function Dashboard() {
                   shape={<RoundedBar />}
                   onMouseEnter={(_: unknown, index: number) => setActiveChartIdx(index)}
                 >
-                  {mockUserGrowth.map((_, index: number) => (
+                  {userGrowth.map((_, index: number) => (
                     <Cell
                       key={index}
                       fill={
@@ -160,9 +182,11 @@ export default function Dashboard() {
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
-            <div className="chart-peak-label" style={{ left: `${(peakIndex / mockUserGrowth.length) * 100 + 3}%` }}>
-              Peak
-            </div>
+            {userGrowth.length > 0 && (
+              <div className="chart-peak-label" style={{ left: `${(peakIndex / userGrowth.length) * 100 + 3}%` }}>
+                Peak
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -181,7 +205,7 @@ export default function Dashboard() {
             <div className="revenue-metric">
               <p className="revenue-metric-label">NET INCOME (FCFA)</p>
               <div className="revenue-metric-value-row">
-                <span className="revenue-metric-value">42.5M</span>
+                <span className="revenue-metric-value">{(stats.totalRevenue / 1000000).toFixed(1)}M</span>
                 <span className="stat-pill up"><TrendingUp size={10} /> +8.1%</span>
               </div>
               <div className="progress-bar" style={{ marginTop: 8 }}>
@@ -191,7 +215,7 @@ export default function Dashboard() {
             <div className="revenue-metric">
               <p className="revenue-metric-label">TICKET SALES</p>
               <div className="revenue-metric-value-row">
-                <span className="revenue-metric-value">8.2K</span>
+                <span className="revenue-metric-value">{(stats.ticketSales / 1000).toFixed(1)}K</span>
                 <span className="stat-pill stable">Stable</span>
               </div>
               <div className="progress-bar" style={{ marginTop: 8 }}>
@@ -210,7 +234,7 @@ export default function Dashboard() {
                 <div className="event-card-mini-info">
                   <p className="event-card-mini-title">{event.title}</p>
                   <p className="event-card-mini-meta">
-                    {event.date} • {event.location}
+                    {new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} • {event.location}
                   </p>
                   <div className="event-card-mini-footer">
                     <div className="attendee-avatars">
@@ -242,8 +266,9 @@ export default function Dashboard() {
             </button>
           </div>
           <div className="activity-list">
-            {mockActivity.map((item: ActivityItem) => {
-              const { Icon, color, bg } = activityConfig[item.type]
+            {activities.length > 0 ? activities.map((item: ActivityItem) => {
+              const config = activityConfig[item.type] || activityConfig.warning;
+              const { Icon, color, bg } = config;
               return (
                 <div key={item.id} className="activity-item">
                   <div className="activity-icon" style={{ background: bg, color }}>
@@ -252,11 +277,13 @@ export default function Dashboard() {
                   <div className="activity-content">
                     <p className="activity-item-title">{item.title}</p>
                     <p className="activity-item-desc">{item.description}</p>
-                    <p className="activity-item-time">{item.time}</p>
+                    <p className="activity-item-time">{new Date(item.createdAt || '').toLocaleDateString()}</p>
                   </div>
                 </div>
               )
-            })}
+            }) : (
+              <p className="text-center text-muted py-4">No recent activity</p>
+            )}
           </div>
           <button className="btn btn-ghost" style={{ width: '100%', justifyContent: 'center', color: 'var(--primary)', fontWeight: 600, marginTop: 4 }}>
             View All System Logs

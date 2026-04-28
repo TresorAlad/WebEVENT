@@ -21,7 +21,7 @@ export interface Event {
   status: EventStatus
   attendees: number
   registrationMode: 'Internal' | 'External'
-  participationMode: 'Online' | 'In-person'
+  participationMode: 'Online' | 'InPlace'
   image?: string
   flagReason?: string
   externalLink?: string
@@ -34,7 +34,7 @@ export interface ActivityItem {
   type: ActivityType
   title: string
   description: string
-  time: string
+  createdAt: string
 }
 
 // ── Stats ──

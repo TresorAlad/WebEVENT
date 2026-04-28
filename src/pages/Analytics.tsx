@@ -1,9 +1,12 @@
+import { useState, useEffect } from 'react'
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip,
   ResponsiveContainer, CartesianGrid, Legend, Cell,
 } from 'recharts'
 import { TrendingUp, Eye, MousePointerClick, Share2, Activity } from 'lucide-react'
-import { mockUserGrowth, mockRevenueByMonth } from '../services/mockData'
+import { getUserGrowth, getRevenueGrowth, getDashboardStats, getAllEvents } from '../services/api'
+import type { ChartDataPoint, DashboardStats, Event } from '../types'
+import Skeleton from '../components/ui/Skeleton'
 
 const engagementData = [
   { label: 'Event Views', value: 124800, icon: Eye, color: 'var(--primary)' },
@@ -12,37 +15,66 @@ const engagementData = [
   { label: 'Active Sessions', value: 2340, icon: Activity, color: 'var(--warning)' },
 ]
 
-const popularEvents = [
-  { title: 'Lomé Web3 Summit 2026', category: 'WEB3', views: 18400, tickets: 320 },
-  { title: 'DevFest Lomé 2026', category: 'TECH', views: 14200, tickets: 680 },
-  { title: 'Lomé Crypto Summit', category: 'FINTECH', views: 11600, tickets: 120 },
-  { title: 'Founders Night', category: 'NETWORKING', views: 9800, tickets: 45 },
-  { title: 'Exclusive Startup Gala', category: 'BUSINESS', views: 8200, tickets: 450 },
-]
-
-const combinedData = mockUserGrowth.map((d, i: number) => ({
-  month: d.month,
-  users: d.value,
-  revenue: Math.round(mockRevenueByMonth[i]?.value / 100000) || 0,
-}))
-
-const CustomTooltip = ({ active, payload, label }: any) => {
-  if (active && payload && payload.length) {
-    return (
-      <div className="chart-tooltip">
-        <p className="chart-tooltip-label">{label}</p>
-        {payload.map((p: any) => (
-          <p key={p.name} style={{ color: p.color, fontWeight: 600, fontSize: 12 }}>
-            {p.name}: {p.value.toLocaleString()}
-          </p>
-        ))}
-      </div>
-    )
-  }
-  return null
-}
-
 export default function Analytics() {
+  const [loading, setLoading] = useState(true)
+  const [userGrowth, setUserGrowth] = useState<ChartDataPoint[]>([])
+  const [revenueGrowth, setRevenueGrowth] = useState<ChartDataPoint[]>([])
+  const [stats, setStats] = useState<DashboardStats | null>(null)
+  const [topEvents, setTopEvents] = useState<Event[]>([])
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [uGrowth, rGrowth, statsData, eventsData] = await Promise.all([
+          getUserGrowth(),
+          getRevenueGrowth(),
+          getDashboardStats(),
+          getAllEvents()
+        ])
+        setUserGrowth(uGrowth)
+        setRevenueGrowth(rGrowth)
+        setStats(statsData)
+        // Simple heuristic for top events: most attendees
+        setTopEvents(eventsData
+          .map((e: any) => ({ ...e, organizer: e.organizer?.name || 'Unknown', attendees: e._count?.participants || 0 }))
+          .sort((a: any, b: any) => b.attendees - a.attendees)
+          .slice(0, 5)
+        )
+      } catch (error) {
+        console.error('Error fetching analytics:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchData()
+  }, [])
+
+  if (loading || !stats) {
+    return <div className="p-8"><Skeleton height={400} /></div>
+  }
+
+  const combinedData = userGrowth.map((d, i: number) => ({
+    month: d.month,
+    users: d.value,
+    revenue: Math.round((revenueGrowth[i]?.value || 0) / 100000) || 0,
+  }))
+
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="chart-tooltip">
+          <p className="chart-tooltip-label">{label}</p>
+          {payload.map((p: any) => (
+            <p key={p.name} style={{ color: p.color, fontWeight: 600, fontSize: 12 }}>
+              {p.name}: {p.value.toLocaleString()}
+            </p>
+          ))}
+        </div>
+      )
+    }
+    return null
+  }
+
   return (
     <div className="analytics-page">
       <div className="page-header">
@@ -94,17 +126,17 @@ export default function Analytics() {
 
         {/* Bar Chart by month */}
         <div className="card">
-          <p className="chart-section-title">Monthly Ticket Sales</p>
-          <p className="text-xs text-muted mb-4">Volume of tickets sold per month</p>
+          <p className="chart-section-title">Monthly Revenue</p>
+          <p className="text-xs text-muted mb-4">Volume of revenue per month (FCFA)</p>
           <ResponsiveContainer width="100%" height={240}>
-            <BarChart data={mockRevenueByMonth} barCategoryGap="30%">
+            <BarChart data={revenueGrowth} barCategoryGap="30%">
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border-light)" />
               <XAxis dataKey="month" tick={{ fill: 'var(--text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} />
               <YAxis hide />
               <Tooltip content={<CustomTooltip />} />
               <Bar dataKey="value" radius={[6, 6, 0, 0]} name="Revenue">
-                {mockRevenueByMonth.map((_, i: number) => (
-                  <Cell key={i} fill={i === 6 ? 'var(--primary)' : 'var(--primary-100)'} />
+                {revenueGrowth.map((_, i: number) => (
+                   <Cell key={i} fill={i === revenueGrowth.length - 1 ? 'var(--primary)' : 'var(--primary-100)'} />
                 ))}
               </Bar>
             </BarChart>
@@ -124,26 +156,31 @@ export default function Analytics() {
                 <th>#</th>
                 <th>Event</th>
                 <th>Category</th>
-                <th>Total Views</th>
+                <th>Organizer</th>
                 <th>Tickets Sold</th>
                 <th>Engagement</th>
               </tr>
             </thead>
             <tbody>
-              {popularEvents.map((ev, i: number) => (
-                <tr key={ev.title}>
+              {topEvents.map((ev: any, i: number) => (
+                <tr key={ev.id}>
                   <td style={{ color: 'var(--text-muted)', fontWeight: 600 }}>0{i + 1}</td>
                   <td style={{ fontWeight: 600 }}>{ev.title}</td>
                   <td><span className="badge badge-primary">{ev.category}</span></td>
-                  <td>{ev.views.toLocaleString()}</td>
-                  <td>{ev.tickets}</td>
+                  <td>{ev.organizer}</td>
+                  <td>{ev.attendees}</td>
                   <td>
                     <div className="progress-bar" style={{ width: 100 }}>
-                      <div className="progress-fill" style={{ width: `${(ev.views / 20000) * 100}%` }} />
+                      <div className="progress-fill" style={{ width: `${Math.min((ev.attendees / 100) * 100, 100)}%` }} />
                     </div>
                   </td>
                 </tr>
               ))}
+              {topEvents.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="text-center py-10">No data available</td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

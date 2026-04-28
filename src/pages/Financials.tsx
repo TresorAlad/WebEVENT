@@ -1,12 +1,13 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
 } from 'recharts'
 import {
   DollarSign, TrendingUp, Download, CreditCard, RefreshCcw, Search, Filter
 } from 'lucide-react'
-import { mockStats, mockRevenueByMonth, mockTransactions } from '../services/mockData'
-import type { Transaction } from '../types'
+import { getDashboardStats, getTransactions, getRevenueGrowth } from '../services/api'
+import type { Transaction, DashboardStats, ChartDataPoint } from '../types'
+import Skeleton from '../components/ui/Skeleton'
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
@@ -22,14 +23,42 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 export default function Financials() {
   const [search, setSearch] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [stats, setStats] = useState<DashboardStats | null>(null)
+  const [transactions, setTransactions] = useState<Transaction[]>([])
+  const [revenueByMonth, setRevenueByMonth] = useState<ChartDataPoint[]>([])
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [statsData, txsData, revData] = await Promise.all([
+          getDashboardStats(),
+          getTransactions(),
+          getRevenueGrowth()
+        ])
+        setStats(statsData)
+        setTransactions(txsData)
+        setRevenueByMonth(revData)
+      } catch (error) {
+        console.error('Error fetching financial data:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchData()
+  }, [])
 
   const filteredTransactions = useMemo(() => {
-    return mockTransactions.filter(tx =>
+    return transactions.filter(tx =>
       tx.event.toLowerCase().includes(search.toLowerCase()) ||
       tx.organizer.toLowerCase().includes(search.toLowerCase()) ||
       tx.id.toLowerCase().includes(search.toLowerCase())
     )
-  }, [search])
+  }, [search, transactions])
+
+  if (loading || !stats) {
+    return <div className="p-8">Loading financial data...</div> // Or a more complex skeleton
+  }
 
   return (
     <div className="financials-page">
@@ -55,11 +84,11 @@ export default function Financials() {
               <DollarSign size={20} />
             </div>
             <span className="stat-pill up">
-              <TrendingUp size={11} /> +8.1%
+              <TrendingUp size={11} /> +{stats.growth}%
             </span>
           </div>
           <p className="stat-card-label">TOTAL REVENUE (FCFA)</p>
-          <p className="stat-card-value">{(mockStats.totalRevenue / 1000000).toFixed(1)}M</p>
+          <p className="stat-card-value">{(stats.totalRevenue / 1000000).toFixed(1)}M</p>
           <p className="text-xs text-muted mt-2">Cumulative revenue from ticket sales</p>
         </div>
 
@@ -70,7 +99,7 @@ export default function Financials() {
             </div>
           </div>
           <p className="stat-card-label">TICKET SALES</p>
-          <p className="stat-card-value">{(mockStats.ticketSales / 1000).toFixed(1)}K</p>
+          <p className="stat-card-value">{(stats.ticketSales / 1000).toFixed(1)}K</p>
           <p className="text-xs text-muted mt-2">Total tickets sold across all events</p>
         </div>
 
@@ -81,8 +110,8 @@ export default function Financials() {
             </div>
           </div>
           <p className="stat-card-label">ORGANIZER PAYOUTS</p>
-          <p className="stat-card-value">34.2M</p>
-          <p className="text-xs text-muted mt-2">Transferred to organizers (last 30 days)</p>
+          <p className="stat-card-value">{((stats.totalRevenue * 0.8) / 1000000).toFixed(1)}M</p>
+          <p className="text-xs text-muted mt-2">Estimated transfers (80% of revenue)</p>
         </div>
       </div>
 
@@ -91,7 +120,7 @@ export default function Financials() {
         <p className="chart-section-title">Revenue Trends</p>
         <p className="text-xs text-muted mb-6">Monthly revenue performance across the platform</p>
         <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={mockRevenueByMonth} barCategoryGap="30%">
+          <BarChart data={revenueByMonth} barCategoryGap="30%">
             <XAxis
               dataKey="month"
               tick={{ fill: 'var(--text-muted)', fontSize: 11 }}
@@ -139,7 +168,7 @@ export default function Financials() {
             <tbody>
               {filteredTransactions.map((tx: Transaction) => (
                 <tr key={tx.id}>
-                  <td className="font-semibold text-primary">{tx.id}</td>
+                  <td className="font-semibold text-primary">{tx.id.substring(0, 8)}...</td>
                   <td className="font-medium">{tx.event}</td>
                   <td>{tx.organizer}</td>
                   <td className="font-bold">{(tx.amount).toLocaleString()}</td>
@@ -154,7 +183,7 @@ export default function Financials() {
               {filteredTransactions.length === 0 && (
                 <tr>
                   <td colSpan={6} style={{ textAlign: 'center', padding: 'var(--space-8)', color: 'var(--text-muted)' }}>
-                    No transactions found for "{search}"
+                    No transactions found
                   </td>
                 </tr>
               )}

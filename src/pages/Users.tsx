@@ -1,21 +1,47 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { SlidersHorizontal, MoreVertical, ChevronLeft, ChevronRight, UserPlus, CheckCircle, AlertTriangle, Ban, Eye } from 'lucide-react'
-import { mockUsers, mockStats } from '../services/mockData'
-import type { User } from '../types'
+import { getUsers, getDashboardStats } from '../services/api'
+import type { User, DashboardStats } from '../types'
 import Modal from '../components/ui/Modal'
+import Skeleton from '../components/ui/Skeleton'
 
 const PAGE_SIZE = 5
 type TabFilter = 'All Accounts' | 'Organizers' | 'Suspended'
 
 export default function Users() {
+  const [users, setUsers] = useState<User[]>([])
+  const [stats, setStats] = useState<DashboardStats | null>(null)
+  const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<TabFilter>('All Accounts')
   const [page, setPage] = useState(1)
   const [openMenu, setOpenMenu] = useState<string | null>(null)
   const [searchVal, setSearchVal] = useState('')
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
 
+  useEffect(() => {
+    fetchData()
+  }, [])
+
+  const fetchData = async () => {
+    try {
+      const [usersData, statsData] = await Promise.all([
+        getUsers(),
+        getDashboardStats()
+      ])
+      setUsers(usersData.map((u: any) => ({
+        ...u,
+        joinedAt: new Date(u.createdAt).toLocaleDateString()
+      })))
+      setStats(statsData)
+    } catch (error) {
+      console.error('Error fetching users data:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const filtered = useMemo(() => {
-    return mockUsers.filter(u => {
+    return users.filter(u => {
       const matchTab =
         tab === 'All Accounts' ? true :
         tab === 'Organizers' ? u.role === 'ORGANIZER' :
@@ -25,7 +51,7 @@ export default function Users() {
         u.email.toLowerCase().includes(searchVal.toLowerCase())
       return matchTab && matchSearch
     })
-  }, [tab, searchVal])
+  }, [users, tab, searchVal])
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
   const paginated = useMemo(() => {
@@ -79,59 +105,75 @@ export default function Users() {
               </tr>
             </thead>
             <tbody>
-              {paginated.map((user: User) => (
-                <tr key={user.id} onClick={() => setSelectedUser(user)} style={{ cursor: 'pointer' }}>
-                  <td>
-                    <div className="user-cell">
-                      {user.avatar ? (
-                        <img src={user.avatar} alt={user.name} className="avatar avatar-md" />
-                      ) : (
-                        <div className="avatar-placeholder avatar-md">
-                          {user.name.charAt(0)}
+              {loading ? (
+                Array.from({ length: PAGE_SIZE }).map((_, i) => (
+                  <tr key={i}>
+                    <td><Skeleton width="150px" height="40px" /></td>
+                    <td><Skeleton width="200px" height="20px" /></td>
+                    <td><Skeleton width="80px" height="20px" /></td>
+                    <td><Skeleton width="100px" height="20px" /></td>
+                    <td><Skeleton width="40px" height="20px" /></td>
+                  </tr>
+                ))
+              ) : paginated.length > 0 ? (
+                paginated.map((user: User) => (
+                  <tr key={user.id} onClick={() => setSelectedUser(user)} style={{ cursor: 'pointer' }}>
+                    <td>
+                      <div className="user-cell">
+                        {user.avatar ? (
+                          <img src={user.avatar} alt={user.name} className="avatar avatar-md" />
+                        ) : (
+                          <div className="avatar-placeholder avatar-md">
+                            {user.name.charAt(0)}
+                          </div>
+                        )}
+                        <div className="user-cell-info">
+                          <p className="user-cell-name">{user.name}</p>
+                          <p className="user-cell-date">Joined {user.joinedAt}</p>
                         </div>
-                      )}
-                      <div className="user-cell-info">
-                        <p className="user-cell-name">{user.name}</p>
-                        <p className="user-cell-date">Joined {user.joinedAt}</p>
                       </div>
-                    </div>
-                  </td>
-                  <td><span className="user-email">{user.email}</span></td>
-                  <td><span className={`badge ${roleBadgeClass(user.role)}`}>{user.role}</span></td>
-                  <td>
-                    <div className="status-cell">
-                      <span className={`status-dot ${statusCls(user.status)}`} />
-                      <span className={`status-text ${statusCls(user.status)}`}>{user.status}</span>
-                    </div>
-                  </td>
-                  <td>
-                    <div className="dropdown" onClick={(e) => e.stopPropagation()}>
-                      <button
-                        className="btn btn-ghost btn-icon"
-                        onClick={() => setOpenMenu(openMenu === user.id ? null : user.id)}
-                      >
-                        <MoreVertical size={16} />
-                      </button>
-                      {openMenu === user.id && (
-                        <div className="dropdown-menu" style={{ right: 'auto', left: 0 }}>
-                          <button className="dropdown-item" onClick={() => setSelectedUser(user)}>
-                            <Eye size={14} /> View Details
-                          </button>
-                          <button className="dropdown-item">
-                            <CheckCircle size={14} /> Activate
-                          </button>
-                          <button className="dropdown-item">
-                            <Ban size={14} /> Suspend
-                          </button>
-                          <button className="dropdown-item danger">
-                            <AlertTriangle size={14} /> Remove
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </td>
+                    </td>
+                    <td><span className="user-email">{user.email}</span></td>
+                    <td><span className={`badge ${roleBadgeClass(user.role)}`}>{user.role}</span></td>
+                    <td>
+                      <div className="status-cell">
+                        <span className={`status-dot ${statusCls(user.status)}`} />
+                        <span className={`status-text ${statusCls(user.status)}`}>{user.status}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <div className="dropdown" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          className="btn btn-ghost btn-icon"
+                          onClick={() => setOpenMenu(openMenu === user.id ? null : user.id)}
+                        >
+                          <MoreVertical size={16} />
+                        </button>
+                        {openMenu === user.id && (
+                          <div className="dropdown-menu" style={{ right: 'auto', left: 0 }}>
+                            <button className="dropdown-item" onClick={() => setSelectedUser(user)}>
+                              <Eye size={14} /> View Details
+                            </button>
+                            <button className="dropdown-item">
+                              <CheckCircle size={14} /> Activate
+                            </button>
+                            <button className="dropdown-item">
+                              <Ban size={14} /> Suspend
+                            </button>
+                            <button className="dropdown-item danger">
+                              <AlertTriangle size={14} /> Remove
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={5} className="text-center py-10">No users found</td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
@@ -178,7 +220,7 @@ export default function Users() {
           </div>
           <div>
             <p className="stat-card-label">New This Week</p>
-            <p className="stat-card-value">+{mockStats.newUsersThisWeek}</p>
+            <p className="stat-card-value">+{stats?.newUsersThisWeek || 0}</p>
           </div>
         </div>
         <div className="stat-card">
@@ -189,7 +231,7 @@ export default function Users() {
           </div>
           <div>
             <p className="stat-card-label">Verified Organizers</p>
-            <p className="stat-card-value">{mockStats.verifiedOrganizers}</p>
+            <p className="stat-card-value">{stats?.verifiedOrganizers || 0}</p>
           </div>
         </div>
         <div className="stat-card">
@@ -200,7 +242,7 @@ export default function Users() {
           </div>
           <div>
             <p className="stat-card-label">Pending Reviews</p>
-            <p className="stat-card-value">{mockStats.pendingReviews}</p>
+            <p className="stat-card-value">{stats?.pendingReviews || 0}</p>
           </div>
         </div>
         <div className="stat-card">
@@ -211,7 +253,7 @@ export default function Users() {
           </div>
           <div>
             <p className="stat-card-label">Suspended Accounts</p>
-            <p className="stat-card-value">0{mockStats.suspendedUsers}</p>
+            <p className="stat-card-value">{stats?.suspendedUsers || 0}</p>
           </div>
         </div>
       </div>
