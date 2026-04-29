@@ -3,7 +3,7 @@ import { auth } from '../config/firebase';
 
 // Pour le développement local avec le backend sur la même machine
 const LOCAL_API_URL = 'http://localhost:5000/api';
-const REMOTE_API_URL = 'https://eventtechtech.vercel.app/api';
+const REMOTE_API_URL = 'https://backend-vhub.vercel.app/api';
 
 // Utilise l'URL locale en mode développement si pas de VITE_API_URL définie
 const API_URL = import.meta.env.VITE_API_URL || 
