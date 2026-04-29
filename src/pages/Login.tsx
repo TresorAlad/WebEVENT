@@ -18,9 +18,8 @@ export default function Login() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault()
-    // Mock login for manual fields for now
-    localStorage.setItem('eh_auth', 'true')
-    navigate('/dashboard')
+    // Removed mock login for security
+    setErrorMsg('Veuillez utiliser la connexion Google.')
   }
 
   const handleGoogleLogin = async () => {

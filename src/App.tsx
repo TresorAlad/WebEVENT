@@ -12,10 +12,11 @@ import Login from './pages/Login'
 import { useAuth } from './hooks/useAuth'
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, loading } = useAuth()
+  const { user, dbUser, loading } = useAuth()
   
   if (loading) return <div>Loading...</div>
   if (!user) return <Navigate to="/login" replace />
+  if (!dbUser || dbUser.role !== 'ADMIN') return <Navigate to="/login" replace />
   
   return <>{children}</>
 }
