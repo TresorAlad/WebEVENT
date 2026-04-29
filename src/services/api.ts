@@ -1,20 +1,40 @@
 import axios from 'axios';
 import { auth } from '../config/firebase';
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://eventtechtech.vercel.app/api';
+// Pour le développement local avec le backend sur la même machine
+const LOCAL_API_URL = 'http://localhost:5000/api';
+const REMOTE_API_URL = 'https://eventtechtech.vercel.app/api';
+
+// Utilise l'URL locale en mode développement si pas de VITE_API_URL définie
+const API_URL = import.meta.env.VITE_API_URL || 
+                (import.meta.env.DEV ? LOCAL_API_URL : REMOTE_API_URL);
 
 const api = axios.create({
   baseURL: API_URL,
+  timeout: 10000,
 });
 
 api.interceptors.request.use(async (config) => {
   const user = auth.currentUser;
   if (user) {
-    const token = await user.getIdToken();
-    config.headers.Authorization = `Bearer ${token}`;
+    try {
+      const token = await user.getIdToken();
+      config.headers.Authorization = `Bearer ${token}`;
+    } catch (err) {
+      console.error('Error getting auth token:', err);
+    }
   }
   return config;
 });
+
+// Interceptor for better error logging
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    console.error(`[API Error] ${error.response?.status || 'Network'} on ${error.config?.url}:`, error.response?.data || error.message);
+    return Promise.reject(error);
+  }
+);
 
 export const syncUserWithBackend = async () => {
   const response = await api.post('/auth/sync');

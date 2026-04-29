@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Lock, Mail, ArrowRight } from 'lucide-react'
+import { Lock, Mail, ArrowRight, AlertCircle } from 'lucide-react'
 
 import { useAuth } from '../hooks/useAuth'
 
 export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const navigate = useNavigate()
   const { login, user } = useAuth()
 
@@ -17,18 +18,32 @@ export default function Login() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault()
-    // Mock login
+    // Mock login for manual fields for now
     localStorage.setItem('eh_auth', 'true')
     navigate('/dashboard')
   }
 
   const handleGoogleLogin = async () => {
+    setErrorMsg(null)
     try {
       await login()
       navigate('/dashboard')
-    } catch (error) {
-      console.error(error)
-      alert('Google login failed')
+    } catch (error: any) {
+      console.error('Google Sign-In Error:', error)
+      
+      let message = 'Échec de la connexion Google.'
+      
+      if (error.code === 'auth/popup-blocked') {
+        message = 'Le popup a été bloqué par votre navigateur.'
+      } else if (error.code === 'auth/unauthorized-domain') {
+        message = 'Ce domaine n\'est pas autorisé dans la console Firebase.'
+      } else if (error.code === 'auth/operation-not-allowed') {
+        message = 'La connexion Google n\'est pas activée sur Firebase.'
+      } else if (error.message) {
+        message = `Erreur: ${error.message}`
+      }
+      
+      setErrorMsg(message)
     }
   }
 
@@ -40,6 +55,23 @@ export default function Login() {
           <h1 className="login-title">EventHub</h1>
           <p className="login-subtitle">SUPER ADMIN DASHBOARD</p>
         </div>
+
+        {errorMsg && (
+          <div style={{ 
+            backgroundColor: '#fee2e2', 
+            color: '#dc2626', 
+            padding: '12px', 
+            borderRadius: '8px', 
+            marginBottom: '20px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            fontSize: '14px'
+          }}>
+            <AlertCircle size={16} />
+            <p>{errorMsg}</p>
+          </div>
+        )}
 
         <form className="login-form" onSubmit={handleLogin}>
           <div className="form-group">
@@ -84,6 +116,7 @@ export default function Login() {
 
         <button 
           onClick={handleGoogleLogin}
+          type="button"
           className="btn btn-outline login-btn" 
           style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}
         >
