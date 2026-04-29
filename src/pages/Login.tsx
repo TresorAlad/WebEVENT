@@ -10,7 +10,7 @@ export default function Login() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [signingIn, setSigningIn] = useState(false)
   const navigate = useNavigate()
-  const { login, logout, user, dbUser, loading, refreshUser } = useAuth()
+  const { login, logout, user, dbUser, loading } = useAuth()
 
   useEffect(() => {
     if (!loading && user && dbUser?.role === 'ADMIN') {
@@ -27,8 +27,7 @@ export default function Login() {
     setErrorMsg(null)
     setSigningIn(true)
     try {
-      await login()
-      const syncedUser = await refreshUser()
+      const syncedUser = await login()
 
       if (syncedUser?.role === 'ADMIN') {
         navigate('/dashboard')
@@ -38,7 +37,7 @@ export default function Login() {
       if (syncedUser && syncedUser.role !== 'ADMIN') {
         setErrorMsg("Accès refusé : ce compte n'est pas administrateur.")
       } else {
-        setErrorMsg("Connexion réussie, mais profil introuvable côté serveur. Vérifiez l'API.")
+        setErrorMsg("Connexion réussie, mais synchronisation serveur échouée. Vérifiez VITE_API_URL et la config Firebase Admin du backend.")
       }
     } catch (error: any) {
       console.error('Google Sign-In Error:', error)
@@ -51,6 +50,8 @@ export default function Login() {
         message = 'Ce domaine n\'est pas autorisé dans la console Firebase.'
       } else if (error.code === 'auth/operation-not-allowed') {
         message = 'La connexion Google n\'est pas activée sur Firebase.'
+      } else if (error?.response?.data?.message) {
+        message = `API: ${error.response.data.message}`
       } else if (error.message) {
         message = `Erreur: ${error.message}`
       }

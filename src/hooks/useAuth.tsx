@@ -7,7 +7,7 @@ interface AuthContextType {
   user: User | null;
   dbUser: any;
   loading: boolean;
-  login: () => Promise<void>;
+  login: () => Promise<any>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<any>;
 }
@@ -19,18 +19,31 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [dbUser, setDbUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  const refreshUser = async () => {
-    if (auth.currentUser) {
-      try {
-        await auth.currentUser.getIdToken(true);
-        const syncedUser = await syncUserWithBackend();
-        setDbUser(syncedUser);
-        return syncedUser;
-      } catch (error) {
-        console.error('Failed to refresh user', error);
+  const waitForCurrentUser = async (maxAttempts = 10, delayMs = 150): Promise<User | null> => {
+    for (let i = 0; i < maxAttempts; i += 1) {
+      if (auth.currentUser) {
+        return auth.currentUser;
       }
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
     }
-    return null;
+    return auth.currentUser;
+  };
+
+  const refreshUser = async () => {
+    const currentUser = await waitForCurrentUser();
+    if (!currentUser) {
+      return null;
+    }
+
+    try {
+      await currentUser.getIdToken(true);
+      const syncedUser = await syncUserWithBackend();
+      setDbUser(syncedUser);
+      return syncedUser;
+    } catch (error) {
+      console.error('Failed to refresh user', error);
+      throw error;
+    }
   };
 
   useEffect(() => {
@@ -49,7 +62,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const login = async () => {
     await signInWithPopup(auth, googleProvider);
-    await refreshUser();
+    return refreshUser();
   };
 
   const logout = async () => {
