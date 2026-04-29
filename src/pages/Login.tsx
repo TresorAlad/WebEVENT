@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Lock, Mail, ArrowRight, AlertCircle } from 'lucide-react'
 
@@ -9,16 +9,16 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const navigate = useNavigate()
-  const { login, user } = useAuth()
+  const { login, logout, user, dbUser, loading } = useAuth()
 
-  if (user) {
-    navigate('/dashboard')
-    return null
-  }
+  useEffect(() => {
+    if (!loading && user && dbUser?.role === 'ADMIN') {
+      navigate('/dashboard')
+    }
+  }, [loading, user, dbUser, navigate])
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault()
-    // Removed mock login for security
     setErrorMsg('Veuillez utiliser la connexion Google.')
   }
 
@@ -122,6 +122,20 @@ export default function Login() {
           <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" alt="Google" />
           Sign in with Google
         </button>
+
+        {user && !loading && dbUser && dbUser.role !== 'ADMIN' && (
+          <div style={{ marginTop: '20px', color: '#b91c1c' }}>
+            <p>Accès refusé : ce compte n'est pas administrateur.</p>
+            <button
+              type="button"
+              onClick={logout}
+              className="btn btn-secondary"
+              style={{ marginTop: '10px' }}
+            >
+              Se déconnecter
+            </button>
+          </div>
+        )}
 
         <div className="login-footer">
           <p>© 2026 EventHub Togo. All rights reserved.</p>
