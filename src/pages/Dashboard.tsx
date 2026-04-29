@@ -101,13 +101,13 @@ export default function Dashboard() {
     <div className="dashboard">
       <div className="page-header">
         <div className="page-header-info">
-          <h1>Lomé Tech Excellence Hub</h1>
-          <p>Real-time overview of the ecosystem's performance</p>
+          <h1>EventHub Lomé Excellence</h1>
+          <p>Aperçu en temps réel des performances de l'écosystème</p>
         </div>
         <div className="page-header-actions">
           <button className="btn btn-outline" id="export-report-btn">
             <Download size={15} />
-            Export Report
+            Exporter le Rapport
           </button>
         </div>
       </div>
@@ -123,15 +123,15 @@ export default function Dashboard() {
               +{stats.growth}%
             </span>
           </div>
-          <p className="stat-card-label">TOTAL EVENTS MANAGED</p>
+          <p className="stat-card-label">TOTAL ÉVÉNEMENTS GÉRÉS</p>
           <p className="stat-card-value">{stats.totalEvents.toLocaleString()}</p>
           <div className="stat-card-sub">
             <div className="stat-sub-item">
-              <span className="stat-sub-label">ACTIVE</span>
+              <span className="stat-sub-label">ACTIFS</span>
               <span className="stat-sub-value">{stats.activeEvents}</span>
             </div>
             <div className="stat-sub-item">
-              <span className="stat-sub-label">PENDING</span>
+              <span className="stat-sub-label">EN ATTENTE</span>
               <span className="stat-sub-value">{stats.pendingEvents}</span>
             </div>
           </div>
@@ -140,12 +140,12 @@ export default function Dashboard() {
         <div className="card community-growth-card">
           <div className="user-growth-header">
             <div>
-              <p className="community-growth-title">Community Growth</p>
+              <p className="community-growth-title">Croissance Communautaire</p>
               <p className="text-xs text-muted" style={{ marginTop: 2 }}>
-                Monthly acquisition trends in Lomé
+                Tendances mensuelles d'acquisition à Lomé
               </p>
             </div>
-            <span className="badge badge-primary">Recent Months</span>
+            <span className="badge badge-primary">Mois Récents</span>
           </div>
           <div className="user-growth-chart">
             <ResponsiveContainer width="100%" height={160}>
@@ -184,7 +184,7 @@ export default function Dashboard() {
             </ResponsiveContainer>
             {userGrowth.length > 0 && (
               <div className="chart-peak-label" style={{ left: `${(peakIndex / userGrowth.length) * 100 + 3}%` }}>
-                Peak
+                Pic
               </div>
             )}
           </div>
@@ -195,15 +195,15 @@ export default function Dashboard() {
         <div className="card revenue-card">
           <div className="revenue-header">
             <div>
-              <p className="revenue-title">Revenue Overview</p>
+              <p className="revenue-title">Aperçu des Revenus</p>
             </div>
             <button className="btn btn-ghost text-sm" style={{ color: 'var(--primary)', fontWeight: 600 }}>
-              Details <ArrowUpRight size={14} />
+              Détails <ArrowUpRight size={14} />
             </button>
           </div>
           <div className="revenue-metrics">
             <div className="revenue-metric">
-              <p className="revenue-metric-label">NET INCOME (FCFA)</p>
+              <p className="revenue-metric-label">REVENU NET (FCFA)</p>
               <div className="revenue-metric-value-row">
                 <span className="revenue-metric-value">{(stats.totalRevenue / 1000000).toFixed(1)}M</span>
                 <span className="stat-pill up"><TrendingUp size={10} /> +8.1%</span>
@@ -213,7 +213,7 @@ export default function Dashboard() {
               </div>
             </div>
             <div className="revenue-metric">
-              <p className="revenue-metric-label">TICKET SALES</p>
+              <p className="revenue-metric-label">BILLETS VENDUS</p>
               <div className="revenue-metric-value-row">
                 <span className="revenue-metric-value">{(stats.ticketSales / 1000).toFixed(1)}K</span>
                 <span className="stat-pill stable">Stable</span>
@@ -234,7 +234,7 @@ export default function Dashboard() {
                 <div className="event-card-mini-info">
                   <p className="event-card-mini-title">{event.title}</p>
                   <p className="event-card-mini-meta">
-                    {new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} • {event.location}
+                    {new Date(event.date).toLocaleDateString('fr-FR', { month: 'short', day: 'numeric' })} • {event.location}
                   </p>
                   <div className="event-card-mini-footer">
                     <div className="attendee-avatars">
@@ -242,14 +242,14 @@ export default function Dashboard() {
                         <img
                           key={i}
                           src={`https://i.pravatar.cc/28?img=${i + event.attendees % 10}`}
-                          alt="attendee"
+                          alt="participant"
                           className="attendee-avatar"
                         />
                       ))}
                       <span className="attendee-count">+{event.attendees}</span>
                     </div>
                     <span className={`badge ${event.status === 'Live' ? 'badge-live' : 'badge-pending'}`}>
-                      {event.status}
+                      {event.status === 'Live' ? 'EN DIRECT' : 'EN ATTENTE'}
                     </span>
                   </div>
                 </div>
@@ -260,7 +260,7 @@ export default function Dashboard() {
 
         <div className="card activity-card">
           <div className="activity-header">
-            <p className="activity-title">Recent Activity</p>
+            <p className="activity-title">Activité Récente</p>
             <button className="topbar-icon-btn" aria-label="Activity history" style={{ width: 30, height: 30 }}>
               <Clock size={15} />
             </button>
@@ -277,16 +277,16 @@ export default function Dashboard() {
                   <div className="activity-content">
                     <p className="activity-item-title">{item.title}</p>
                     <p className="activity-item-desc">{item.description}</p>
-                    <p className="activity-item-time">{new Date(item.createdAt || '').toLocaleDateString()}</p>
+                    <p className="activity-item-time">{new Date(item.createdAt || '').toLocaleDateString('fr-FR')}</p>
                   </div>
                 </div>
               )
             }) : (
-              <p className="text-center text-muted py-4">No recent activity</p>
+              <p className="text-center text-muted py-4">Aucune activité récente</p>
             )}
           </div>
           <button className="btn btn-ghost" style={{ width: '100%', justifyContent: 'center', color: 'var(--primary)', fontWeight: 600, marginTop: 4 }}>
-            View All System Logs
+            Voir tous les journaux système
           </button>
         </div>
       </div>

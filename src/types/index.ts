@@ -17,9 +17,11 @@ export interface Event {
   organizer: string
   location: string
   date: string
+  endDate?: string
   category: string
   status: EventStatus
   attendees: number
+  description?: string
   registrationMode: 'Internal' | 'External'
   participationMode: 'Online' | 'InPlace'
   image?: string

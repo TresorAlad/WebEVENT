@@ -6,12 +6,12 @@ import {
 import { useAuth } from '../../hooks/useAuth'
 
 const navItems = [
-  { to: '/dashboard',  icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/events',     icon: Calendar,        label: 'Events' },
-  { to: '/users',      icon: Users,           label: 'Admin Management' },
-  { to: '/analytics',  icon: BarChart2,       label: 'Post Analytics' },
-  { to: '/financials', icon: DollarSign,      label: 'Financials' },
-  { to: '/settings',   icon: Settings,        label: 'System Settings' },
+  { to: '/dashboard',  icon: LayoutDashboard, label: 'Tableau de Bord' },
+  { to: '/events',     icon: Calendar,        label: 'Événements' },
+  { to: '/users',      icon: Users,           label: 'Gestion Admin' },
+  { to: '/analytics',  icon: BarChart2,       label: 'Statistiques' },
+  { to: '/financials', icon: DollarSign,      label: 'Finances' },
+  { to: '/settings',   icon: Settings,        label: 'Configuration' },
 ]
 
 export default function Sidebar() {
@@ -59,7 +59,7 @@ export default function Sidebar() {
           onClick={() => navigate('/events?action=create')}
         >
           <Plus size={16} strokeWidth={2.5} />
-          <span>Create New Event</span>
+          <span>Créer un Événement</span>
         </button>
 
         <div className="sidebar-footer-links">
@@ -69,7 +69,7 @@ export default function Sidebar() {
           </button>
           <button className="sidebar-footer-item" onClick={handleSignOut}>
             <LogOut size={16} />
-            <span className="sidebar-nav-text">Sign Out</span>
+            <span className="sidebar-nav-text">Déconnexion</span>
           </button>
         </div>
       </div>

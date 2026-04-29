@@ -34,12 +34,12 @@ export default function Topbar() {
           id="topbar-search"
           type="text"
           className="topbar-search-input"
-          placeholder="Global search events, admins..."
+          placeholder="Recherche globale événements, admins..."
           value={search}
           onChange={e => setSearch(e.target.value)}
           onKeyDown={(e) => {
              if(e.key === 'Enter' && search) {
-                notify(`Global search for "${search}" triggered.`, 'info')
+                notify(`Recherche globale pour "${search}" lancée.`, 'info')
              }
           }}
         />
@@ -48,7 +48,7 @@ export default function Topbar() {
       {/* Center tabs */}
       <div className="topbar-tabs">
         <button className="topbar-tab active">Console</button>
-        <button className="topbar-tab" onClick={() => notify('Activity Logs coming soon in v2.0', 'info')}>Log History</button>
+        <button className="topbar-tab" onClick={() => notify('Historique d\'activité bientôt disponible en v2.0', 'info')}>Journal d'Activité</button>
       </div>
 
       {/* Right actions */}
@@ -80,7 +80,7 @@ export default function Topbar() {
         <button
           className="topbar-icon-btn"
           onClick={() => setDark(!dark)}
-          title="Toggle Dark Mode"
+          title="Changer le thème"
         >
           {dark ? <Sun size={18} className="text-warning" /> : <Moon size={18} />}
         </button>
@@ -104,17 +104,17 @@ export default function Topbar() {
           {showProfileMenu && (
             <div className="dropdown-menu" style={{ right: 0, minWidth: 200 }}>
               <button className="dropdown-item" onClick={() => navigate('/profile')}>
-                <User size={14} /> Account Profile
+                <User size={14} /> Profil du Compte
               </button>
               <button className="dropdown-item" onClick={() => navigate('/settings')}>
-                <Settings size={14} /> System Settings
+                <Settings size={14} /> Paramètres Système
               </button>
-              <button className="dropdown-item" onClick={() => notify('Security center active', 'info')}>
-                <Shield size={14} /> Security Center
+              <button className="dropdown-item" onClick={() => notify('Centre de sécurité actif', 'info')}>
+                <Shield size={14} /> Centre de Sécurité
               </button>
               <div className="divider" />
               <button className="dropdown-item danger" onClick={handleSignOut}>
-                <LogOut size={14} /> Sign Out
+                <LogOut size={14} /> Déconnexion
               </button>
             </div>
           )}
@@ -125,6 +125,4 @@ export default function Topbar() {
 }
 
 // Small helper since I used it above
-const CheckCircle = ({ size }: { size: number }) => <span style={{ color: 'var(--success)' }}><Bell size={size} /></span>
-const AlertTriangle = ({ size }: { size: number }) => <span style={{ color: 'var(--warning)' }}><Bell size={size} /></span>
 const Shield = ({ size }: { size: number }) => <span style={{ color: 'var(--info)' }}><Bell size={size} /></span>

@@ -73,7 +73,7 @@ export default function Events() {
 
   const handleCreateEvent = async () => {
     if (!newEventTitle || !newEventOrganizer) {
-      notify('Please fill out necessary fields')
+      notify('Veuillez remplir les champs obligatoires')
       return
     }
     setCreating(true)
@@ -87,7 +87,7 @@ export default function Events() {
         formData.append('endDate', new Date(`${newEventEndDate}T${newEventEndTime || '23:59'}`).toISOString())
       }
       formData.append('location', newEventType === 'in-person' ? newEventLocation : newEventMeetingLink)
-      formData.append('description', newEventDescription || 'A brand new event.')
+      formData.append('description', newEventDescription || 'Un nouvel événement.')
       formData.append('participationMode', newEventType === 'online' ? 'Online' : 'InPlace')
       formData.append('registrationMode', newEventIsExternal ? 'External' : 'Internal')
       if (newEventIsExternal && newEventExternalLink) {
@@ -98,7 +98,7 @@ export default function Events() {
       }
       
       await createEvent(formData)
-      notify('Event created successfully')
+      notify('Événement créé avec succès')
       setIsCreateModalOpen(false)
       fetchEvents()
       // reset state
@@ -132,11 +132,11 @@ export default function Events() {
       // Mapping server fields (like organizer.name) to frontend Event type if needed
       setEvents(data.map((e: any) => ({
         ...e,
-        organizer: e.organizer?.name || 'Unknown Organizer',
+        organizer: e.organizer?.name || 'Organisateur Inconnu',
         attendees: e._count?.participants || 0
       })))
     } catch (error) {
-      console.error('Error fetching events:', error)
+      console.error('Erreur lors de la récupération des événements:', error)
     } finally {
       setLoading(false)
     }
@@ -153,7 +153,8 @@ export default function Events() {
 
   const handleAction = (e: React.MouseEvent, action: string) => {
     e.stopPropagation()
-    notify(`Event ${action} successfully!`)
+    const actionsFr: any = { approved: 'approuvé', flagged: 'signalé', archived: 'archivé' }
+    notify(`Événement ${actionsFr[action] || action} avec succès !`)
     setOpenMenu(null)
   }
 
@@ -162,17 +163,17 @@ export default function Events() {
       {/* Header */}
       <div className="page-header">
         <div className="page-header-info">
-          <h1>Event Management</h1>
-          <p>Manage, approve and monitor all tech ecosystem events in Togo.</p>
+          <h1>Gestion des Événements</h1>
+          <p>Gérez, approuvez et surveillez tous les événements de l'écosystème au Togo.</p>
         </div>
         <div className="page-header-actions">
           <button className="btn btn-outline" id="events-filter-btn">
             <SlidersHorizontal size={15} />
-            Advanced Filters
+            Filtres Avancés
           </button>
           <button className="btn btn-primary" id="events-create-btn" onClick={() => setIsCreateModalOpen(true)}>
             <Plus size={15} />
-            Create New Event
+            Créer un Événement
           </button>
         </div>
       </div>
@@ -197,7 +198,7 @@ export default function Events() {
           <input
             type="text"
             className="input"
-            placeholder="Search events, organizers, or IDs..."
+            placeholder="Rechercher des événements, organisateurs, ou IDs..."
             style={{ paddingLeft: 42 }}
             value={search}
             onChange={e => setSearch(e.target.value)}
@@ -222,7 +223,7 @@ export default function Events() {
             let currentStatus = event.status as EventStatus;
             const now = new Date();
             const startDate = new Date(event.date);
-            const endDate = (event as any).endDate ? new Date((event as any).endDate) : null;
+            const endDate = event.endDate ? new Date(event.endDate) : null;
 
             if (currentStatus === 'Upcoming' || currentStatus === 'Live') {
               if (now < startDate) {
@@ -234,7 +235,7 @@ export default function Events() {
               }
             }
 
-            const sc = statusConfig[currentStatus] || { label: 'UNKNOWN', cls: 'badge-neutral' }
+            const sc = statusConfig[currentStatus] || { label: 'INCONNU', cls: 'badge-neutral' }
             return (
               <div key={event.id} className="event-card" onClick={() => setSelectedEvent({ ...event, status: currentStatus })}>
               <div className="event-card-img-wrap">
@@ -246,7 +247,7 @@ export default function Events() {
                 <div className="event-card-img-badges">
                   <span className={`badge ${sc.cls}`}>{sc.label}</span>
                   <span className={`badge ${event.participationMode === 'Online' ? 'badge-purple' : 'badge-indigo'}`}>
-                    {event.participationMode === 'Online' ? 'ONLINE' : 'IN-PERSON'}
+                    {event.participationMode === 'Online' ? 'EN LIGNE' : 'PRÉSENTIEL'}
                   </span>
                 </div>
               </div>
@@ -255,7 +256,7 @@ export default function Events() {
                   <div className="flex gap-2">
                     <p className="event-card-category">{event.category}</p>
                     <span className={`text-xs px-2 py-0.5 rounded-full ${event.registrationMode === 'External' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}`}>
-                      {event.registrationMode === 'External' ? 'External' : 'Internal'}
+                      {event.registrationMode === 'External' ? 'Externe' : 'Interne'}
                     </span>
                   </div>
                   <div className="dropdown" onClick={e => e.stopPropagation()}>
@@ -264,15 +265,15 @@ export default function Events() {
                     </button>
                     {openMenu === event.id && (
                       <div className="dropdown-menu">
-                        <button className="dropdown-item" onClick={(e) => handleAction(e, 'approved')}><CheckCircle size={14}/> Approve</button>
-                        <button className="dropdown-item" onClick={(e) => handleAction(e, 'flagged')}><Flag size={14}/> Flag</button>
-                        <button className="dropdown-item danger" onClick={(e) => handleAction(e, 'archived')}><Archive size={14}/> Archive</button>
+                        <button className="dropdown-item" onClick={(e) => handleAction(e, 'approved')}><CheckCircle size={14}/> Approuver</button>
+                        <button className="dropdown-item" onClick={(e) => handleAction(e, 'flagged')}><Flag size={14}/> Signaler</button>
+                        <button className="dropdown-item danger" onClick={(e) => handleAction(e, 'archived')}><Archive size={14}/> Archiver</button>
                       </div>
                     )}
                   </div>
                 </div>
                 <h3 className="event-card-title">{event.title}</h3>
-                <p className="event-card-organizer">by {event.organizer}</p>
+                <p className="event-card-organizer">par {event.organizer}</p>
                 
                 <div className="event-card-meta mt-4">
                   <div className="event-meta-item">
@@ -281,7 +282,7 @@ export default function Events() {
                   </div>
                   <div className="event-meta-item">
                     <Users size={12} />
-                    <span>{event.attendees} registered</span>
+                    <span>{event.attendees} inscrits</span>
                   </div>
                 </div>
               </div>
@@ -290,7 +291,7 @@ export default function Events() {
         })
         ) : (
           <div className="col-span-full py-20 text-center">
-            <p className="text-muted">No events found matching your criteria.</p>
+            <p className="text-muted">Aucun événement ne correspond à vos critères.</p>
           </div>
         )}
       </div>
@@ -451,17 +452,17 @@ export default function Events() {
       </Modal>
 
       {/* Details Modal */}
-      <Modal isOpen={!!selectedEvent} onClose={() => setSelectedEvent(null)} title="Event Details" size="lg">
+      <Modal isOpen={!!selectedEvent} onClose={() => setSelectedEvent(null)} title="Détails de l'Événement" size="lg">
          {selectedEvent && (
             <div className="event-details-modal">
                <div className="event-detail-banner">
-                  {(selectedEvent as any).imageUrl || (selectedEvent as any).image ? (
-                     <img src={(selectedEvent as any).imageUrl || (selectedEvent as any).image} alt="" className="event-banner-img" />
+                  {selectedEvent.image ? (
+                     <img src={selectedEvent.image} alt="" className="event-banner-img" />
                   ) : (
                      <div className="event-banner-img placeholder-img" />
                   )}
                   <span className={`badge ${statusConfig[selectedEvent.status].cls} banner-badge`}>
-                     {selectedEvent.status}
+                     {statusConfig[selectedEvent.status].label}
                   </span>
                </div>
                
@@ -474,7 +475,7 @@ export default function Events() {
                         </p>
                      </div>
                      <div className="text-right">
-                        <p className="text-sm font-bold text-muted uppercase tracking-wider">Estimated Attendees</p>
+                        <p className="text-sm font-bold text-muted uppercase tracking-wider">Participants Estimés</p>
                         <p className="text-2xl font-black text-primary">{selectedEvent.attendees}</p>
                      </div>
                   </div>
@@ -484,20 +485,20 @@ export default function Events() {
                         <CalendarIcon size={18} className="text-primary" />
                         <div>
                            <p className="text-xs text-muted font-bold">DATE</p>
-                           <p className="font-bold">{selectedEvent.date}, 2026</p>
+                           <p className="font-bold">{new Date(selectedEvent.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
                         </div>
                      </div>
                      <div className="info-box">
                         <Clock size={18} className="text-warning" />
                         <div>
-                           <p className="text-xs text-muted font-bold">TIME</p>
-                           <p className="font-bold">09:00 AM GMT</p>
+                           <p className="text-xs text-muted font-bold">HEURE</p>
+                           <p className="font-bold">{new Date(selectedEvent.date).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</p>
                         </div>
                      </div>
                      <div className="info-box">
                         <Users size={18} className="text-success" />
                         <div>
-                           <p className="text-xs text-muted font-bold">ORGANIZER</p>
+                           <p className="text-xs text-muted font-bold">ORGANISATEUR</p>
                            <p className="font-bold">{selectedEvent.organizer}</p>
                         </div>
                      </div>
@@ -506,9 +507,9 @@ export default function Events() {
                   <div className="divider" />
 
                   <div className="mt-8">
-                     <h4 className="font-bold mb-4">Event Description</h4>
+                     <h4 className="font-bold mb-4">Description de l'Événement</h4>
                      <p className="text-muted leading-relaxed">
-                        This is a major tech event happening in Togo. It focuses on the latest trends in {selectedEvent.category} and brings together experts, developers and entrepreneurs for a day of learning and networking at {selectedEvent.location}.
+                        {selectedEvent.description || `Ceci est un événement technologique majeur au Togo. Il se concentre sur les dernières tendances en ${selectedEvent.category} et rassemble des experts, des développeurs et des entrepreneurs pour une journée d'apprentissage et de réseautage à ${selectedEvent.location}.`}
                      </p>
                   </div>
 
@@ -516,22 +517,22 @@ export default function Events() {
                      <div className="warning-panel mt-8">
                         <ShieldAlert size={20} className="text-danger" />
                         <div>
-                           <p className="font-bold text-danger">Safety Alert</p>
-                           <p className="text-sm text-danger opacity-80">{selectedEvent.flagReason || 'This event has been reported for violations.'}</p>
+                           <p className="font-bold text-danger">Alerte de Sécurité</p>
+                           <p className="text-sm text-danger opacity-80">{selectedEvent.flagReason || 'Cet événement a été signalé pour violation des règles.'}</p>
                         </div>
                      </div>
                   )}
 
                   <div className="modal-footer mt-10">
-                     <button className="btn btn-ghost" onClick={() => setSelectedEvent(null)}>Close</button>
+                     <button className="btn btn-ghost" onClick={() => setSelectedEvent(null)}>Fermer</button>
                      <div className="flex gap-3">
                         {selectedEvent.status === 'Pending' && (
-                           <button className="btn btn-success" onClick={() => { notify('Event approved'); setSelectedEvent(null); }}>
-                              <BadgeCheck size={16} /> Approve Event
+                           <button className="btn btn-success" onClick={() => { notify('Événement approuvé'); setSelectedEvent(null); }}>
+                              <BadgeCheck size={16} /> Approuver l'Événement
                            </button>
                         )}
-                        <button className="btn btn-danger-outline" onClick={() => { notify('Event flagged'); setSelectedEvent(null); }}>
-                           <ShieldAlert size={16} /> Flag content
+                        <button className="btn btn-danger-outline" onClick={() => { notify('Événement signalé'); setSelectedEvent(null); }}>
+                           <ShieldAlert size={16} /> Signaler le contenu
                         </button>
                      </div>
                   </div>
