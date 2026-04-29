@@ -57,33 +57,21 @@ export default function Topbar() {
         <div className="dropdown">
           <button 
             className={`topbar-icon-btn ${showNotifications ? 'active' : ''}`} 
-            onClick={() => setShowNotifications(!showNotifications)}
+            onClick={() => {
+              setShowNotifications(!showNotifications)
+              setShowProfileMenu(false)
+            }}
           >
             <Bell size={18} />
-            <span className="topbar-notif-badge">3</span>
           </button>
           {showNotifications && (
-            <div className="dropdown-menu" style={{ width: 300, right: 0 }}>
+            <div className="dropdown-menu" style={{ width: 250, right: 0 }}>
               <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-light)' }}>
                 <p className="font-bold text-sm">Notifications</p>
               </div>
-              <div className="notif-item">
-                <div className="notif-icon success"><CheckCircle size={14} /></div>
-                <div>
-                    <p className="text-xs font-semibold">System Update Successful</p>
-                    <p className="text-xs text-muted">Version 1.2.5 has been deployed.</p>
-                </div>
+              <div style={{ padding: '30px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                <p className="text-xs font-semibold">Aucune notification</p>
               </div>
-              <div className="notif-item">
-                <div className="notif-icon warning"><AlertTriangle size={14} /></div>
-                <div>
-                    <p className="text-xs font-semibold">Security Alert</p>
-                    <p className="text-xs text-muted">Unusual activity from Lomé.</p>
-                </div>
-              </div>
-              <button className="dropdown-item" style={{ justifyContent: 'center', fontWeight: 600, color: 'var(--primary)' }}>
-                Mark all as read
-              </button>
             </div>
           )}
         </div>
@@ -99,7 +87,13 @@ export default function Topbar() {
 
         {/* Profile */}
         <div className="dropdown">
-          <div className="topbar-profile" onClick={() => setShowProfileMenu(!showProfileMenu)}>
+          <div 
+            className="topbar-profile" 
+            onClick={() => {
+              setShowProfileMenu(!showProfileMenu)
+              setShowNotifications(false)
+            }}
+          >
             <img src={dbUser?.avatar || user?.photoURL || "https://i.pravatar.cc/150?img=52"} alt="Admin" className="avatar avatar-md" />
             <div className="topbar-profile-info">
               <span className="topbar-profile-name">{dbUser?.name?.split(' ')[0] || user?.displayName?.split(' ')[0] || 'Admin'}</span>

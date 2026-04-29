@@ -10,7 +10,7 @@ export interface User {
 }
 
 // ── Event ──
-export type EventStatus = 'Live' | 'Pending' | 'Flagged' | 'Past' | 'Cancelled'
+export type EventStatus = 'Live' | 'Upcoming' | 'Pending' | 'Flagged' | 'Past' | 'Cancelled'
 export interface Event {
   id: string
   title: string

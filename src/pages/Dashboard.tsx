@@ -174,8 +174,8 @@ export default function Dashboard() {
                         index === peakIndex
                           ? '#ffffff'
                           : activeChartIdx === index
-                          ? 'rgba(202,240,248,0.7)'
-                          : 'rgba(202,240,248,0.35)'
+                          ? 'rgba(255,255,255,0.8)'
+                          : 'rgba(255,255,255,0.3)'
                       }
                     />
                   ))}
@@ -226,8 +226,8 @@ export default function Dashboard() {
           <div className="event-cards-mini">
             {liveEvents.map(event => (
               <div key={event.id} className="event-card-mini">
-                {event.image ? (
-                  <img src={event.image} alt={event.title} className="event-card-mini-img" />
+                {(event as any).imageUrl || (event as any).image ? (
+                  <img src={(event as any).imageUrl || (event as any).image} alt={event.title} className="event-card-mini-img" />
                 ) : (
                   <div className="event-card-mini-img placeholder-img" />
                 )}

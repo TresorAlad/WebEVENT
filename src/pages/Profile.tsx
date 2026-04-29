@@ -91,7 +91,8 @@ export default function Profile() {
               <button
                 type="button"
                 onClick={handleRandomAvatar}
-                className="absolute bottom-0 right-0 p-2 bg-white rounded-full shadow-lg border border-border hover:bg-bg-card transition-colors"
+                className="absolute bottom-0 right-0 p-2 rounded-full shadow-lg border border-border hover:bg-bg transition-colors"
+                style={{ backgroundColor: 'var(--bg-card)' }}
                 title="Random Avatar"
               >
                 <RefreshCw size={16} className="text-primary" />

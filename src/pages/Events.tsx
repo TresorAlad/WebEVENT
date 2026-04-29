@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react'
-import { Search, SlidersHorizontal, Plus, MoreVertical, MapPin, Users, CheckCircle, Clock, Flag, Archive, Calendar as CalendarIcon, Upload, ShieldAlert, BadgeCheck } from 'lucide-react'
-import { getAllEvents } from '../services/api'
+import { Search, SlidersHorizontal, Plus, MoreVertical, MapPin, Users, CheckCircle, Clock, Flag, Archive, Calendar as CalendarIcon, Upload, ShieldAlert, BadgeCheck, Loader2 } from 'lucide-react'
+import { getAllEvents, createEvent } from '../services/api'
 import type { EventStatus, Event } from '../types'
 import Modal from '../components/ui/Modal'
 import { useNotification } from '../components/ui/NotificationProvider'
@@ -16,6 +16,7 @@ const tabs: { label: string; status: EventStatus | 'All' }[] = [
 
 const statusConfig: Record<EventStatus, { label: string; cls: string }> = {
   Live:      { label: 'LIVE',      cls: 'badge-live' },
+  Upcoming:  { label: 'À VENIR',   cls: 'badge-pending' },
   Pending:   { label: 'PENDING',   cls: 'badge-pending' },
   Flagged:   { label: 'FLAGGED',   cls: 'badge-flagged' },
   Past:      { label: 'PAST',      cls: 'badge-neutral' },
@@ -31,6 +32,95 @@ export default function Events() {
   const [openMenu, setOpenMenu] = useState<string | null>(null)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null)
+
+  // New Event Form State
+  const [step, setStep] = useState(1)
+  const TOTAL_STEPS = 4
+
+  const [newEventTitle, setNewEventTitle] = useState('')
+  const [newEventOrganizer, setNewEventOrganizer] = useState('')
+  const [newEventCategory, setNewEventCategory] = useState('Tech & Development')
+  const [newEventImage, setNewEventImage] = useState<File | null>(null)
+  const [newEventImagePreview, setNewEventImagePreview] = useState<string | null>(null)
+  
+  // Advanced State
+  const [newEventDescription, setNewEventDescription] = useState('')
+  const [newEventDate, setNewEventDate] = useState('')
+  const [newEventTime, setNewEventTime] = useState('')
+  const [newEventEndDate, setNewEventEndDate] = useState('')
+  const [newEventEndTime, setNewEventEndTime] = useState('')
+  
+  const [newEventType, setNewEventType] = useState<'in-person'|'online'|'hybrid'>('in-person')
+  const [newEventLocation, setNewEventLocation] = useState('')
+  const [newEventMeetingLink, setNewEventMeetingLink] = useState('')
+
+  const [newEventIsExternal, setNewEventIsExternal] = useState(false)
+  const [newEventExternalLink, setNewEventExternalLink] = useState('')
+
+  const [creating, setCreating] = useState(false)
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        notify('L\'image est trop volumineuse (max 5MB). Veuillez en choisir une plus petite.')
+        return
+      }
+      setNewEventImage(file)
+      setNewEventImagePreview(URL.createObjectURL(file))
+    }
+  }
+
+  const handleCreateEvent = async () => {
+    if (!newEventTitle || !newEventOrganizer) {
+      notify('Please fill out necessary fields')
+      return
+    }
+    setCreating(true)
+    try {
+      const formData = new FormData()
+      formData.append('title', newEventTitle)
+      formData.append('organizer', newEventOrganizer)
+      formData.append('category', newEventCategory)
+      formData.append('date', newEventDate ? new Date(`${newEventDate}T${newEventTime || '00:00'}`).toISOString() : new Date().toISOString())
+      if (newEventEndDate) {
+        formData.append('endDate', new Date(`${newEventEndDate}T${newEventEndTime || '23:59'}`).toISOString())
+      }
+      formData.append('location', newEventType === 'in-person' ? newEventLocation : newEventMeetingLink)
+      formData.append('description', newEventDescription || 'A brand new event.')
+      formData.append('participationMode', newEventType === 'online' ? 'Online' : 'InPlace')
+      formData.append('registrationMode', newEventIsExternal ? 'External' : 'Internal')
+      if (newEventIsExternal && newEventExternalLink) {
+        formData.append('externalLink', newEventExternalLink)
+      }
+      if (newEventImage) {
+        formData.append('image', newEventImage)
+      }
+      
+      await createEvent(formData)
+      notify('Event created successfully')
+      setIsCreateModalOpen(false)
+      fetchEvents()
+      // reset state
+      setStep(1)
+      setNewEventTitle('')
+      setNewEventOrganizer('')
+      setNewEventDescription('')
+      setNewEventDate('')
+      setNewEventTime('')
+      setNewEventEndDate('')
+      setNewEventEndTime('')
+      setNewEventLocation('')
+      setNewEventMeetingLink('')
+      setNewEventImage(null)
+      setNewEventImagePreview(null)
+    } catch (error: any) {
+      console.error(error?.response?.data || error)
+      notify(`Échec de création : ${error?.response?.data?.message || error.message || 'Erreur réseau'}`)
+    } finally {
+      setCreating(false)
+    }
+  }
 
   useEffect(() => {
     fetchEvents()
@@ -129,12 +219,27 @@ export default function Events() {
           ))
         ) : filtered.length > 0 ? (
           filtered.map((event: Event) => {
-            const sc = statusConfig[event.status] || { label: 'UNKNOWN', cls: 'badge-neutral' }
+            let currentStatus = event.status as EventStatus;
+            const now = new Date();
+            const startDate = new Date(event.date);
+            const endDate = (event as any).endDate ? new Date((event as any).endDate) : null;
+
+            if (currentStatus === 'Upcoming' || currentStatus === 'Live') {
+              if (now < startDate) {
+                currentStatus = 'Upcoming';
+              } else if (endDate && now > endDate) {
+                currentStatus = 'Past';
+              } else {
+                currentStatus = 'Live';
+              }
+            }
+
+            const sc = statusConfig[currentStatus] || { label: 'UNKNOWN', cls: 'badge-neutral' }
             return (
-              <div key={event.id} className="event-card" onClick={() => setSelectedEvent(event)}>
+              <div key={event.id} className="event-card" onClick={() => setSelectedEvent({ ...event, status: currentStatus })}>
               <div className="event-card-img-wrap">
-                {event.image ? (
-                  <img src={event.image} alt={event.title} className="event-card-img" />
+                {(event as any).imageUrl || (event as any).image ? (
+                  <img src={(event as any).imageUrl || (event as any).image} alt={event.title} className="event-card-img" />
                 ) : (
                   <div className="event-card-img event-card-img-placeholder" />
                 )}
@@ -191,36 +296,156 @@ export default function Events() {
       </div>
 
       {/* Create Modal */}
-      <Modal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} title="Add New Platform Event">
-         <div className="p-6">
-            <div className="form-group mb-4">
-               <label className="label">Event Title</label>
-               <input type="text" className="input" placeholder="e.g. Lomé DevOps Summit" />
+      <Modal isOpen={isCreateModalOpen} onClose={() => { setIsCreateModalOpen(false); setStep(1); }} title={`Créer un Événement (Étape ${step}/${TOTAL_STEPS})`} size="lg">
+         <div className="p-6 h-[600px] overflow-y-auto w-full relative">
+            <div className="w-full bg-slate-100 h-1.5 rounded-full mb-8 relative overflow-hidden">
+               <div className="bg-primary h-full rounded-full transition-all duration-300" style={{ width: `${(step / TOTAL_STEPS) * 100}%` }}></div>
             </div>
-            <div className="grid-2 gap-4 mb-4">
-               <div className="form-group">
-                  <label className="label">Organizer</label>
-                  <input type="text" className="input" placeholder="Company or Community" />
-               </div>
-               <div className="form-group">
-                  <label className="label">Category</label>
-                  <select className="input">
-                     <option>Tech & Development</option>
-                     <option>Business & Startups</option>
-                     <option>Web3 & Crypto</option>
-                  </select>
-               </div>
-            </div>
-            <div className="form-group mb-6">
-               <label className="label">Promotional Banner</label>
-               <div className="upload-box">
-                  <Upload size={24} className="text-muted mb-2" />
-                  <p className="text-xs">Select image (建議 1200x600)</p>
-               </div>
-            </div>
-            <div className="flex justify-end gap-3 mt-8">
-               <button className="btn btn-ghost" onClick={() => setIsCreateModalOpen(false)}>Cancel</button>
-               <button className="btn btn-primary" onClick={() => { notify('Event created successfully'); setIsCreateModalOpen(false); }}>Create Event</button>
+
+            {step === 1 && (
+              <div className="animate-in fade-in slide-in-from-right-4 duration-300">
+                <h3 className="text-xl font-bold mb-1">Informations Générales</h3>
+                <p className="text-sm text-slate-500 mb-6">Les éléments clés de votre événement.</p>
+
+                <div className="form-group mb-6">
+                   <label className="label">Bannière</label>
+                   <label className="upload-box relative" style={{ cursor: 'pointer', overflow: 'hidden', padding: newEventImagePreview ? 0 : undefined, display: 'flex', borderRadius: 16 }}>
+                      <input type="file" className="hidden" accept="image/*" onChange={handleImageChange} />
+                      {newEventImagePreview ? (
+                        <img src={newEventImagePreview} alt="Preview" className="w-full h-full object-cover" style={{ minHeight: 180 }} />
+                      ) : (
+                        <div className="flex flex-col items-center justify-center w-full min-h-[180px] bg-slate-50/50 hover:bg-slate-50 transition border rounded-2xl border-dashed">
+                          <Upload size={32} className="text-primary mb-3" />
+                          <p className="text-sm font-semibold text-primary">Cliquer pour uploader</p>
+                          <p className="text-xs text-muted mt-1">Format suggéré : 1080x1080 (PNG, JPG)</p>
+                        </div>
+                      )}
+                   </label>
+                </div>
+
+                <div className="form-group mb-4">
+                   <label className="label">Nom de l'événement</label>
+                   <input type="text" className="input bg-slate-50" placeholder="Ex: Lomé DevOps Summit" value={newEventTitle} onChange={e => setNewEventTitle(e.target.value)} />
+                </div>
+                
+                <div className="grid-2 gap-4 mb-4">
+                   <div className="form-group">
+                      <label className="label">Organisateur / Communauté</label>
+                      <input type="text" className="input bg-slate-50" placeholder="Ex: Google Devs" value={newEventOrganizer} onChange={e => setNewEventOrganizer(e.target.value)} />
+                   </div>
+                   <div className="form-group">
+                      <label className="label">Catégorie</label>
+                      <select className="input bg-slate-50" value={newEventCategory} onChange={e => setNewEventCategory(e.target.value)}>
+                         <option>Tech & Development</option>
+                         <option>Business & Startups</option>
+                         <option>Web3 & Crypto</option>
+                         <option>Innovation & Fintech</option>
+                      </select>
+                   </div>
+                </div>
+
+                <div className="form-group mb-4">
+                   <label className="label">Description Complète</label>
+                   <textarea className="input bg-slate-50 min-h-[120px] py-3" placeholder="Parlez-nous de l'événement..." value={newEventDescription} onChange={e => setNewEventDescription(e.target.value)} />
+                </div>
+              </div>
+            )}
+
+            {step === 2 && (
+              <div className="animate-in fade-in slide-in-from-right-4 duration-300">
+                <h3 className="text-xl font-bold mb-1">Date & Horaire</h3>
+                <p className="text-sm text-slate-500 mb-6">Planifiez le lancement.</p>
+
+                <div className="grid-2 gap-6 mb-6">
+                   <div className="form-group">
+                      <label className="label">Date & Heure de début</label>
+                      <div className="flex gap-2">
+                        <input type="date" className="input bg-slate-50" value={newEventDate} onChange={e => setNewEventDate(e.target.value)} />
+                        <input type="time" className="input bg-slate-50" value={newEventTime} onChange={e => setNewEventTime(e.target.value)} />
+                      </div>
+                   </div>
+                   <div className="form-group">
+                      <label className="label">Date & Heure de fin</label>
+                      <div className="flex gap-2">
+                        <input type="date" className="input bg-slate-50" value={newEventEndDate} onChange={e => setNewEventEndDate(e.target.value)} />
+                        <input type="time" className="input bg-slate-50" value={newEventEndTime} onChange={e => setNewEventEndTime(e.target.value)} />
+                      </div>
+                   </div>
+                </div>
+              </div>
+            )}
+
+            {step === 3 && (
+              <div className="animate-in fade-in slide-in-from-right-4 duration-300">
+                <h3 className="text-xl font-bold mb-1">Type d'Événement</h3>
+                <p className="text-sm text-slate-500 mb-6">Où se déroule l'événement ?</p>
+
+                <div className="grid grid-cols-3 gap-4 mb-8">
+                  {[{ id: 'in-person', title: 'Présentiel', icon: <MapPin/> }, { id: 'online', title: 'En ligne', icon: <Users/> }, { id: 'hybrid', title: 'Hybride', icon: <ShieldAlert/> }].map(type => (
+                    <div key={type.id} onClick={() => setNewEventType(type.id as any)} className={`p-4 border-2 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3 transition-colors ${newEventType === type.id ? 'border-primary bg-primary/5 text-primary' : 'border-slate-200 text-slate-500 hover:border-slate-300'}`}>
+                      {type.icon}
+                      <span className="font-bold text-sm">{type.title}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {(newEventType === 'in-person' || newEventType === 'hybrid') && (
+                  <div className="form-group mb-4">
+                     <label className="label">Lieu et Adresse</label>
+                     <input type="text" className="input bg-slate-50" placeholder="Ex: Hôtel 2 Février, Lomé" value={newEventLocation} onChange={e => setNewEventLocation(e.target.value)} />
+                  </div>
+                )}
+
+                {(newEventType === 'online' || newEventType === 'hybrid') && (
+                  <div className="form-group mb-4">
+                     <label className="label">Lien du meeting (Google Meet, Teams)</label>
+                     <input type="text" className="input bg-slate-50" placeholder="https://..." value={newEventMeetingLink} onChange={e => setNewEventMeetingLink(e.target.value)} />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {step === 4 && (
+              <div className="animate-in fade-in slide-in-from-right-4 duration-300">
+                <h3 className="text-xl font-bold mb-1">Inscriptions</h3>
+                <p className="text-sm text-slate-500 mb-6">Gérez comment les participants s'inscrivent.</p>
+                
+                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl mb-6 border border-slate-200">
+                  <div>
+                    <h4 className="font-bold text-sm">Site Web Externe</h4>
+                    <p className="text-xs text-slate-500">Cochez si vous utilisez Eventbrite, Meetup etc.</p>
+                  </div>
+                  <input type="checkbox" className="toggle toggle-primary" checked={newEventIsExternal} onChange={e => setNewEventIsExternal(e.target.checked)} />
+                </div>
+
+                {newEventIsExternal ? (
+                  <div className="form-group mb-4">
+                     <label className="label">URL d'inscription externe</label>
+                     <input type="url" className="input bg-slate-50" placeholder="https://..." value={newEventExternalLink} onChange={e => setNewEventExternalLink(e.target.value)} />
+                  </div>
+                ) : (
+                  <div className="p-6 bg-emerald-50 rounded-2xl border border-emerald-200 flex flex-col items-center justify-center text-center">
+                    <CheckCircle className="text-emerald-500 mb-3" size={32} />
+                    <h4 className="font-bold text-emerald-800">Inscription Native Active</h4>
+                    <p className="text-sm text-emerald-600 mt-1">Vos participants s'inscriront en un clic depuis votre application EventHub.</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="flex justify-end gap-3 mt-8 pt-4">
+               <button className="btn btn-ghost bg-slate-100 hover:bg-slate-200 px-6" onClick={() => step === 1 ? setIsCreateModalOpen(false) : setStep(step - 1)} disabled={creating}>
+                 {step === 1 ? 'Annuler' : 'Précédent'}
+               </button>
+               {step < TOTAL_STEPS ? (
+                 <button className="btn btn-primary px-8" onClick={() => setStep(step + 1)}>
+                   Suivant
+                 </button>
+               ) : (
+                 <button className="btn btn-primary px-8 bg-emerald-600 hover:bg-emerald-700 border-none" onClick={handleCreateEvent} disabled={creating}>
+                   {creating ? <Loader2 size={16} className="animate-spin" /> : 'Publier Événement'}
+                 </button>
+               )}
             </div>
          </div>
       </Modal>
@@ -230,8 +455,8 @@ export default function Events() {
          {selectedEvent && (
             <div className="event-details-modal">
                <div className="event-detail-banner">
-                  {selectedEvent.image ? (
-                     <img src={selectedEvent.image} alt="" className="event-banner-img" />
+                  {(selectedEvent as any).imageUrl || (selectedEvent as any).image ? (
+                     <img src={(selectedEvent as any).imageUrl || (selectedEvent as any).image} alt="" className="event-banner-img" />
                   ) : (
                      <div className="event-banner-img placeholder-img" />
                   )}

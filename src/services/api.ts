@@ -61,4 +61,9 @@ export const updateProfile = async (profileData: { name: string; avatar: string;
   return response.data;
 };
 
+export const createEvent = async (formData: FormData) => {
+  const response = await api.post('/events', formData);
+  return response.data;
+};
+
 export default api;
