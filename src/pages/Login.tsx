@@ -50,6 +50,8 @@ export default function Login() {
         message = 'Ce domaine n\'est pas autorisé dans la console Firebase.'
       } else if (error.code === 'auth/operation-not-allowed') {
         message = 'La connexion Google n\'est pas activée sur Firebase.'
+      } else if (error?.message === 'Network Error') {
+        message = 'Backend injoignable. Vérifiez que le serveur tourne sur VITE_API_URL et que CORS est bien configuré.'
       } else if (error?.response?.data?.message) {
         message = `API: ${error.response.data.message}`
       } else if (error.message) {

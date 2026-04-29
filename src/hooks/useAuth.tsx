@@ -10,6 +10,7 @@ interface AuthContextType {
   login: () => Promise<any>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<any>;
+  updateDbUser: (patch: Record<string, unknown>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -46,15 +47,30 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const updateDbUser = (patch: Record<string, unknown>) => {
+    setDbUser((previousUser: any) => {
+      if (!previousUser) {
+        return previousUser;
+      }
+      return { ...previousUser, ...patch };
+    });
+  };
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      setUser(firebaseUser);
-      if (firebaseUser) {
-        await refreshUser();
-      } else {
+      try {
+        setUser(firebaseUser);
+        if (firebaseUser) {
+          await refreshUser();
+        } else {
+          setDbUser(null);
+        }
+      } catch (error) {
+        console.error('Auth state sync failed:', error);
         setDbUser(null);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return unsubscribe;
@@ -70,7 +86,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, dbUser, loading, login, logout, refreshUser }}>
+    <AuthContext.Provider value={{ user, dbUser, loading, login, logout, refreshUser, updateDbUser }}>
       {children}
     </AuthContext.Provider>
   );

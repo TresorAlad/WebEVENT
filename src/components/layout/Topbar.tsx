@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Search, Bell, Moon, Sun, ChevronDown, User, Settings, LogOut } from 'lucide-react'
 import { useNotification } from '../ui/NotificationProvider'
 import { useNavigate } from 'react-router-dom'
@@ -12,12 +12,29 @@ export default function Topbar() {
   const [search, setSearch] = useState('')
   const [showNotifications, setShowNotifications] = useState(false)
   const [showProfileMenu, setShowProfileMenu] = useState(false)
+  const notificationsRef = useRef<HTMLDivElement | null>(null)
+  const profileMenuRef = useRef<HTMLDivElement | null>(null)
 
   // Sync Dark Mode with Body class
   useEffect(() => {
     if (dark) document.body.classList.add('dark-mode')
     else document.body.classList.remove('dark-mode')
   }, [dark])
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as Node
+      const clickedOutsideNotifications =
+        notificationsRef.current && !notificationsRef.current.contains(target)
+      const clickedOutsideProfile = profileMenuRef.current && !profileMenuRef.current.contains(target)
+
+      if (clickedOutsideNotifications) setShowNotifications(false)
+      if (clickedOutsideProfile) setShowProfileMenu(false)
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   const handleSignOut = async () => {
     await logout()
@@ -54,7 +71,7 @@ export default function Topbar() {
       {/* Right actions */}
       <div className="topbar-actions">
         {/* Notifications */}
-        <div className="dropdown">
+        <div className="dropdown" ref={notificationsRef}>
           <button 
             className={`topbar-icon-btn ${showNotifications ? 'active' : ''}`} 
             onClick={() => {
@@ -86,7 +103,7 @@ export default function Topbar() {
         </button>
 
         {/* Profile */}
-        <div className="dropdown">
+        <div className="dropdown" ref={profileMenuRef}>
           <div 
             className="topbar-profile" 
             onClick={() => {

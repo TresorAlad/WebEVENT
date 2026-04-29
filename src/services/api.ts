@@ -1,13 +1,13 @@
 import axios from 'axios';
 import { auth } from '../config/firebase';
 
-// Pour le développement local avec le backend sur la même machine
-const LOCAL_API_URL = 'http://localhost:5000/api';
-const REMOTE_API_URL = 'https://backend-vhub.vercel.app/api';
+const API_URL = import.meta.env.VITE_API_URL?.trim();
 
-// Utilise l'URL locale en mode développement si pas de VITE_API_URL définie
-const API_URL = import.meta.env.VITE_API_URL || 
-                (import.meta.env.DEV ? LOCAL_API_URL : REMOTE_API_URL);
+if (!API_URL) {
+  throw new Error(
+    'Missing VITE_API_URL. Define it in web-admin/.env (e.g. http://localhost:5000/api).'
+  );
+}
 
 const api = axios.create({
   baseURL: API_URL,

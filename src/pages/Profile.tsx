@@ -29,7 +29,7 @@ const AVATAR_OPTIONS = [
 
 export default function Profile() {
   const { notify } = useNotification()
-  const { user, dbUser, refreshUser } = useAuth()
+  const { user, dbUser, refreshUser, updateDbUser } = useAuth()
   const [saving, setSaving] = useState(false)
 
   const [formData, setFormData] = useState({
@@ -51,6 +51,7 @@ export default function Profile() {
   const handleRandomAvatar = () => {
     const randomAvatar = AVATAR_OPTIONS[Math.floor(Math.random() * AVATAR_OPTIONS.length)]
     setFormData(prev => ({ ...prev, avatar: randomAvatar }))
+    updateDbUser({ avatar: randomAvatar })
   }
 
   const handleSave = async (e: React.FormEvent) => {
