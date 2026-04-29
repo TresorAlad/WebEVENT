@@ -8,6 +8,7 @@ export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
+  const [signingIn, setSigningIn] = useState(false)
   const navigate = useNavigate()
   const { login, logout, user, dbUser, loading } = useAuth()
 
@@ -24,9 +25,11 @@ export default function Login() {
 
   const handleGoogleLogin = async () => {
     setErrorMsg(null)
+    setSigningIn(true)
     try {
       await login()
-      navigate('/dashboard')
+      // L'authentification s'est bien passée, 
+      // le useEffect va attendre que dbUser se charge et faire la redirection
     } catch (error: any) {
       console.error('Google Sign-In Error:', error)
       
@@ -43,6 +46,7 @@ export default function Login() {
       }
       
       setErrorMsg(message)
+      setSigningIn(false)
     }
   }
 
@@ -115,12 +119,13 @@ export default function Login() {
 
         <button 
           onClick={handleGoogleLogin}
+          disabled={signingIn || loading}
           type="button"
           className="btn btn-outline login-btn" 
-          style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}
+          style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', opacity: signingIn || loading ? 0.6 : 1 }}
         >
           <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" alt="Google" />
-          Sign in with Google
+          {signingIn || loading ? 'Connexion en cours...' : 'Sign in with Google'}
         </button>
 
         {user && !loading && dbUser && dbUser.role !== 'ADMIN' && (
