@@ -22,6 +22,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const refreshUser = async () => {
     if (auth.currentUser) {
       try {
+        await auth.currentUser.getIdToken(true);
         const syncedUser = await syncUserWithBackend();
         setDbUser(syncedUser);
         return syncedUser;
@@ -48,6 +49,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const login = async () => {
     await signInWithPopup(auth, googleProvider);
+    await refreshUser();
   };
 
   const logout = async () => {
