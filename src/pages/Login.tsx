@@ -10,7 +10,7 @@ export default function Login() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [signingIn, setSigningIn] = useState(false)
   const navigate = useNavigate()
-  const { login, logout, user, dbUser, loading } = useAuth()
+  const { login, logout, user, dbUser, loading, refreshUser } = useAuth()
 
   useEffect(() => {
     if (!loading && user && dbUser?.role === 'ADMIN') {
@@ -28,8 +28,18 @@ export default function Login() {
     setSigningIn(true)
     try {
       await login()
-      // L'authentification s'est bien passée, 
-      // le useEffect va attendre que dbUser se charge et faire la redirection
+      const syncedUser = await refreshUser()
+
+      if (syncedUser?.role === 'ADMIN') {
+        navigate('/dashboard')
+        return
+      }
+
+      if (syncedUser && syncedUser.role !== 'ADMIN') {
+        setErrorMsg("Accès refusé : ce compte n'est pas administrateur.")
+      } else {
+        setErrorMsg("Connexion réussie, mais profil introuvable côté serveur. Vérifiez l'API.")
+      }
     } catch (error: any) {
       console.error('Google Sign-In Error:', error)
       
@@ -46,6 +56,7 @@ export default function Login() {
       }
       
       setErrorMsg(message)
+    } finally {
       setSigningIn(false)
     }
   }
