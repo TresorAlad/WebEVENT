@@ -7,20 +7,20 @@ import { useNotification } from '../components/ui/NotificationProvider'
 import Skeleton from '../components/ui/Skeleton'
 
 const tabs: { label: string; status: EventStatus | 'All' }[] = [
-  { label: 'All Events', status: 'All' },
-  { label: 'Pending', status: 'Pending' },
-  { label: 'Live', status: 'Live' },
-  { label: 'Flagged', status: 'Flagged' },
-  { label: 'Past', status: 'Past' },
+  { label: 'Tous', status: 'All' },
+  { label: 'En attente', status: 'Pending' },
+  { label: 'En direct', status: 'Live' },
+  { label: 'Signalés', status: 'Flagged' },
+  { label: 'Passés', status: 'Past' },
 ]
 
 const statusConfig: Record<EventStatus, { label: string; cls: string }> = {
-  Live:      { label: 'LIVE',      cls: 'badge-live' },
-  Upcoming:  { label: 'À VENIR',   cls: 'badge-pending' },
-  Pending:   { label: 'PENDING',   cls: 'badge-pending' },
-  Flagged:   { label: 'FLAGGED',   cls: 'badge-flagged' },
-  Past:      { label: 'PAST',      cls: 'badge-neutral' },
-  Cancelled: { label: 'CANCELLED', cls: 'badge-neutral' },
+  Live:      { label: 'LIVE',        cls: 'badge-live' },
+  Upcoming:  { label: 'À VENIR',     cls: 'badge-pending' },
+  Pending:   { label: 'EN ATTENTE',  cls: 'badge-pending' },
+  Flagged:   { label: 'SIGNALÉ',     cls: 'badge-flagged' },
+  Past:      { label: 'PASSÉ',       cls: 'badge-neutral' },
+  Cancelled: { label: 'ANNULÉ',      cls: 'badge-neutral' },
 }
 
 export default function Events() {
@@ -255,7 +255,7 @@ export default function Events() {
                 <div className="flex justify-between items-start mb-2">
                   <div className="flex gap-2">
                     <p className="event-card-category">{event.category}</p>
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${event.registrationMode === 'External' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                    <span className={`text-xs px-2 py-05 rounded-full ${event.registrationMode === 'External' ? 'badge-reg-external' : 'badge-reg-internal'}`}>
                       {event.registrationMode === 'External' ? 'Externe' : 'Interne'}
                     </span>
                   </div>
@@ -278,7 +278,7 @@ export default function Events() {
                 <div className="event-card-meta mt-4">
                   <div className="event-meta-item">
                     <MapPin size={12} />
-                    <span className="truncate max-w-[100px]">{event.location}</span>
+                    <span className="truncate max-w-xs">{event.location}</span>
                   </div>
                   <div className="event-meta-item">
                     <Users size={12} />
@@ -298,157 +298,164 @@ export default function Events() {
 
       {/* Create Modal */}
       <Modal isOpen={isCreateModalOpen} onClose={() => { setIsCreateModalOpen(false); setStep(1); }} title={`Créer un Événement (Étape ${step}/${TOTAL_STEPS})`} size="lg">
-         <div className="p-6 h-[600px] overflow-y-auto w-full relative">
-            <div className="w-full bg-slate-100 h-1.5 rounded-full mb-8 relative overflow-hidden">
-               <div className="bg-primary h-full rounded-full transition-all duration-300" style={{ width: `${(step / TOTAL_STEPS) * 100}%` }}></div>
-            </div>
+        <div className="modal-step-inner">
+          <div className="step-progress-track">
+            <div className="step-progress-fill" style={{ width: `${(step / TOTAL_STEPS) * 100}%` }} />
+          </div>
 
-            {step === 1 && (
-              <div className="animate-in fade-in slide-in-from-right-4 duration-300">
-                <h3 className="text-xl font-bold mb-1">Informations Générales</h3>
-                <p className="text-sm text-slate-500 mb-6">Les éléments clés de votre événement.</p>
+          {step === 1 && (
+            <div className="step-content">
+              <h3 className="text-xl font-bold mb-1">Informations générales</h3>
+              <p className="text-sm text-secondary mb-6">Les éléments clés de votre événement.</p>
 
-                <div className="form-group mb-6">
-                   <label className="label">Bannière</label>
-                   <label className="upload-box relative" style={{ cursor: 'pointer', overflow: 'hidden', padding: newEventImagePreview ? 0 : undefined, display: 'flex', borderRadius: 16 }}>
-                      <input type="file" className="hidden" accept="image/*" onChange={handleImageChange} />
-                      {newEventImagePreview ? (
-                        <img src={newEventImagePreview} alt="Preview" className="w-full h-full object-cover" style={{ minHeight: 180 }} />
-                      ) : (
-                        <div className="flex flex-col items-center justify-center w-full min-h-[180px] bg-slate-50/50 hover:bg-slate-50 transition border rounded-2xl border-dashed">
-                          <Upload size={32} className="text-primary mb-3" />
-                          <p className="text-sm font-semibold text-primary">Cliquer pour uploader</p>
-                          <p className="text-xs text-muted mt-1">Format suggéré : 1080x1080 (PNG, JPG)</p>
-                        </div>
-                      )}
-                   </label>
-                </div>
-
-                <div className="form-group mb-4">
-                   <label className="label">Nom de l'événement</label>
-                   <input type="text" className="input bg-slate-50" placeholder="Ex: Lomé DevOps Summit" value={newEventTitle} onChange={e => setNewEventTitle(e.target.value)} />
-                </div>
-                
-                <div className="grid-2 gap-4 mb-4">
-                   <div className="form-group">
-                      <label className="label">Organisateur / Communauté</label>
-                      <input type="text" className="input bg-slate-50" placeholder="Ex: Google Devs" value={newEventOrganizer} onChange={e => setNewEventOrganizer(e.target.value)} />
-                   </div>
-                   <div className="form-group">
-                      <label className="label">Catégorie</label>
-                      <select className="input bg-slate-50" value={newEventCategory} onChange={e => setNewEventCategory(e.target.value)}>
-                         <option>Tech & Development</option>
-                         <option>Business & Startups</option>
-                         <option>Web3 & Crypto</option>
-                         <option>Innovation & Fintech</option>
-                      </select>
-                   </div>
-                </div>
-
-                <div className="form-group mb-4">
-                   <label className="label">Description Complète</label>
-                   <textarea className="input bg-slate-50 min-h-[120px] py-3" placeholder="Parlez-nous de l'événement..." value={newEventDescription} onChange={e => setNewEventDescription(e.target.value)} />
-                </div>
-              </div>
-            )}
-
-            {step === 2 && (
-              <div className="animate-in fade-in slide-in-from-right-4 duration-300">
-                <h3 className="text-xl font-bold mb-1">Date & Horaire</h3>
-                <p className="text-sm text-slate-500 mb-6">Planifiez le lancement.</p>
-
-                <div className="grid-2 gap-6 mb-6">
-                   <div className="form-group">
-                      <label className="label">Date & Heure de début</label>
-                      <div className="flex gap-2">
-                        <input type="date" className="input bg-slate-50" value={newEventDate} onChange={e => setNewEventDate(e.target.value)} />
-                        <input type="time" className="input bg-slate-50" value={newEventTime} onChange={e => setNewEventTime(e.target.value)} />
-                      </div>
-                   </div>
-                   <div className="form-group">
-                      <label className="label">Date & Heure de fin</label>
-                      <div className="flex gap-2">
-                        <input type="date" className="input bg-slate-50" value={newEventEndDate} onChange={e => setNewEventEndDate(e.target.value)} />
-                        <input type="time" className="input bg-slate-50" value={newEventEndTime} onChange={e => setNewEventEndTime(e.target.value)} />
-                      </div>
-                   </div>
-                </div>
-              </div>
-            )}
-
-            {step === 3 && (
-              <div className="animate-in fade-in slide-in-from-right-4 duration-300">
-                <h3 className="text-xl font-bold mb-1">Type d'Événement</h3>
-                <p className="text-sm text-slate-500 mb-6">Où se déroule l'événement ?</p>
-
-                <div className="grid grid-cols-3 gap-4 mb-8">
-                  {[{ id: 'in-person', title: 'Présentiel', icon: <MapPin/> }, { id: 'online', title: 'En ligne', icon: <Users/> }, { id: 'hybrid', title: 'Hybride', icon: <ShieldAlert/> }].map(type => (
-                    <div key={type.id} onClick={() => setNewEventType(type.id as any)} className={`p-4 border-2 rounded-2xl cursor-pointer flex flex-col items-center justify-center gap-3 transition-colors ${newEventType === type.id ? 'border-primary bg-primary/5 text-primary' : 'border-slate-200 text-slate-500 hover:border-slate-300'}`}>
-                      {type.icon}
-                      <span className="font-bold text-sm">{type.title}</span>
+              <div className="form-group mb-6">
+                <label className="label">Bannière</label>
+                <label className={`upload-box${newEventImagePreview ? ' upload-box--has-image' : ''}`}>
+                  <input type="file" className="hidden" accept="image/*" onChange={handleImageChange} />
+                  {newEventImagePreview ? (
+                    <img src={newEventImagePreview} alt="Aperçu" className="w-full h-full object-cover min-h-180" />
+                  ) : (
+                    <div className="upload-zone-empty">
+                      <Upload size={32} className="text-primary mb-3" />
+                      <p className="text-sm font-semibold text-primary">Cliquer pour téléverser</p>
+                      <p className="text-xs text-muted mt-2">Format suggéré : 1080×1080 (PNG, JPG)</p>
                     </div>
-                  ))}
-                </div>
-
-                {(newEventType === 'in-person' || newEventType === 'hybrid') && (
-                  <div className="form-group mb-4">
-                     <label className="label">Lieu et Adresse</label>
-                     <input type="text" className="input bg-slate-50" placeholder="Ex: Hôtel 2 Février, Lomé" value={newEventLocation} onChange={e => setNewEventLocation(e.target.value)} />
-                  </div>
-                )}
-
-                {(newEventType === 'online' || newEventType === 'hybrid') && (
-                  <div className="form-group mb-4">
-                     <label className="label">Lien du meeting (Google Meet, Teams)</label>
-                     <input type="text" className="input bg-slate-50" placeholder="https://..." value={newEventMeetingLink} onChange={e => setNewEventMeetingLink(e.target.value)} />
-                  </div>
-                )}
+                  )}
+                </label>
               </div>
-            )}
 
-            {step === 4 && (
-              <div className="animate-in fade-in slide-in-from-right-4 duration-300">
-                <h3 className="text-xl font-bold mb-1">Inscriptions</h3>
-                <p className="text-sm text-slate-500 mb-6">Gérez comment les participants s'inscrivent.</p>
-                
-                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl mb-6 border border-slate-200">
-                  <div>
-                    <h4 className="font-bold text-sm">Site Web Externe</h4>
-                    <p className="text-xs text-slate-500">Cochez si vous utilisez Eventbrite, Meetup etc.</p>
-                  </div>
-                  <input type="checkbox" className="toggle toggle-primary" checked={newEventIsExternal} onChange={e => setNewEventIsExternal(e.target.checked)} />
-                </div>
-
-                {newEventIsExternal ? (
-                  <div className="form-group mb-4">
-                     <label className="label">URL d'inscription externe</label>
-                     <input type="url" className="input bg-slate-50" placeholder="https://..." value={newEventExternalLink} onChange={e => setNewEventExternalLink(e.target.value)} />
-                  </div>
-                ) : (
-                  <div className="p-6 bg-emerald-50 rounded-2xl border border-emerald-200 flex flex-col items-center justify-center text-center">
-                    <CheckCircle className="text-emerald-500 mb-3" size={32} />
-                    <h4 className="font-bold text-emerald-800">Inscription Native Active</h4>
-                    <p className="text-sm text-emerald-600 mt-1">Vos participants s'inscriront en un clic depuis votre application EventHub.</p>
-                  </div>
-                )}
+              <div className="form-group mb-4">
+                <label className="label">Nom de l&apos;événement</label>
+                <input type="text" className="input input-bg-muted" placeholder="Ex. : Lomé DevOps Summit" value={newEventTitle} onChange={e => setNewEventTitle(e.target.value)} />
               </div>
-            )}
 
-            <div className="flex justify-end gap-3 mt-8 pt-4">
-               <button className="btn btn-ghost bg-slate-100 hover:bg-slate-200 px-6" onClick={() => step === 1 ? setIsCreateModalOpen(false) : setStep(step - 1)} disabled={creating}>
-                 {step === 1 ? 'Annuler' : 'Précédent'}
-               </button>
-               {step < TOTAL_STEPS ? (
-                 <button className="btn btn-primary px-8" onClick={() => setStep(step + 1)}>
-                   Suivant
-                 </button>
-               ) : (
-                 <button className="btn btn-primary px-8 bg-emerald-600 hover:bg-emerald-700 border-none" onClick={handleCreateEvent} disabled={creating}>
-                   {creating ? <Loader2 size={16} className="animate-spin" /> : 'Publier Événement'}
-                 </button>
-               )}
+              <div className="grid-2 gap-4 mb-4">
+                <div className="form-group">
+                  <label className="label">Organisateur / communauté</label>
+                  <input type="text" className="input input-bg-muted" placeholder="Ex. : Google Devs" value={newEventOrganizer} onChange={e => setNewEventOrganizer(e.target.value)} />
+                </div>
+                <div className="form-group">
+                  <label className="label">Catégorie</label>
+                  <select className="input input-bg-muted" value={newEventCategory} onChange={e => setNewEventCategory(e.target.value)}>
+                    <option>Tech &amp; développement</option>
+                    <option>Business &amp; startups</option>
+                    <option>Web3 &amp; crypto</option>
+                    <option>Innovation &amp; fintech</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="form-group mb-4">
+                <label className="label">Description complète</label>
+                <textarea className="input input-bg-muted min-h-120 py-3" placeholder="Parlez-nous de l&apos;événement…" value={newEventDescription} onChange={e => setNewEventDescription(e.target.value)} />
+              </div>
             </div>
-         </div>
+          )}
+
+          {step === 2 && (
+            <div className="step-content">
+              <h3 className="text-xl font-bold mb-1">Date et horaire</h3>
+              <p className="text-sm text-secondary mb-6">Planifiez le lancement.</p>
+
+              <div className="grid-2 gap-6 mb-6">
+                <div className="form-group">
+                  <label className="label">Date et heure de début</label>
+                  <div className="flex gap-2">
+                    <input type="date" className="input input-bg-muted" value={newEventDate} onChange={e => setNewEventDate(e.target.value)} />
+                    <input type="time" className="input input-bg-muted" value={newEventTime} onChange={e => setNewEventTime(e.target.value)} />
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label className="label">Date et heure de fin</label>
+                  <div className="flex gap-2">
+                    <input type="date" className="input input-bg-muted" value={newEventEndDate} onChange={e => setNewEventEndDate(e.target.value)} />
+                    <input type="time" className="input input-bg-muted" value={newEventEndTime} onChange={e => setNewEventEndTime(e.target.value)} />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {step === 3 && (
+            <div className="step-content">
+              <h3 className="text-xl font-bold mb-1">Type d&apos;événement</h3>
+              <p className="text-sm text-secondary mb-6">Où se déroule l&apos;événement ?</p>
+
+              <div className="event-type-grid">
+                {[{ id: 'in-person', title: 'Présentiel', icon: <MapPin /> }, { id: 'online', title: 'En ligne', icon: <Users /> }, { id: 'hybrid', title: 'Hybride', icon: <ShieldAlert /> }].map(type => (
+                  <div
+                    key={type.id}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setNewEventType(type.id as 'in-person' | 'online' | 'hybrid') } }}
+                    onClick={() => setNewEventType(type.id as 'in-person' | 'online' | 'hybrid')}
+                    className={`event-type-card${newEventType === type.id ? ' active' : ''}`}
+                  >
+                    {type.icon}
+                    <span className="font-bold text-sm">{type.title}</span>
+                  </div>
+                ))}
+              </div>
+
+              {(newEventType === 'in-person' || newEventType === 'hybrid') && (
+                <div className="form-group mb-4">
+                  <label className="label">Lieu et adresse</label>
+                  <input type="text" className="input input-bg-muted" placeholder="Ex. : Hôtel 2 Février, Lomé" value={newEventLocation} onChange={e => setNewEventLocation(e.target.value)} />
+                </div>
+              )}
+
+              {(newEventType === 'online' || newEventType === 'hybrid') && (
+                <div className="form-group mb-4">
+                  <label className="label">Lien de visioconférence (Meet, Teams…)</label>
+                  <input type="text" className="input input-bg-muted" placeholder="https://…" value={newEventMeetingLink} onChange={e => setNewEventMeetingLink(e.target.value)} />
+                </div>
+              )}
+            </div>
+          )}
+
+          {step === 4 && (
+            <div className="step-content">
+              <h3 className="text-xl font-bold mb-1">Inscriptions</h3>
+              <p className="text-sm text-secondary mb-6">Définissez comment les participants s&apos;inscrivent.</p>
+
+              <div className="registration-toggle-row">
+                <div>
+                  <h4 className="font-bold text-sm">Site web externe</h4>
+                  <p className="text-xs text-secondary">Cochez si vous utilisez Eventbrite, Meetup, etc.</p>
+                </div>
+                <input type="checkbox" className="event-registration-checkbox" checked={newEventIsExternal} onChange={e => setNewEventIsExternal(e.target.checked)} aria-label="Inscription sur site externe" />
+              </div>
+
+              {newEventIsExternal ? (
+                <div className="form-group mb-4">
+                  <label className="label">URL d&apos;inscription externe</label>
+                  <input type="url" className="input input-bg-muted" placeholder="https://…" value={newEventExternalLink} onChange={e => setNewEventExternalLink(e.target.value)} />
+                </div>
+              ) : (
+                <div className="registration-native-panel">
+                  <CheckCircle className="text-success mb-3" size={32} />
+                  <h4 className="font-bold text-success">Inscription native active</h4>
+                  <p className="text-sm text-secondary mt-2">Les participants s&apos;inscrivent depuis l&apos;application EventHub.</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="modal-step-actions">
+            <button type="button" className="btn btn-muted-ghost px-6" onClick={() => (step === 1 ? setIsCreateModalOpen(false) : setStep(step - 1))} disabled={creating}>
+              {step === 1 ? 'Annuler' : 'Précédent'}
+            </button>
+            {step < TOTAL_STEPS ? (
+              <button type="button" className="btn btn-primary px-8" onClick={() => setStep(step + 1)}>
+                Suivant
+              </button>
+            ) : (
+              <button type="button" className="btn btn-success px-8" onClick={handleCreateEvent} disabled={creating}>
+                {creating ? <Loader2 size={16} className="animate-spin" /> : 'Publier l&apos;événement'}
+              </button>
+            )}
+          </div>
+        </div>
       </Modal>
 
       {/* Details Modal */}
@@ -456,8 +463,8 @@ export default function Events() {
          {selectedEvent && (
             <div className="event-details-modal">
                <div className="event-detail-banner">
-                  {selectedEvent.image ? (
-                     <img src={selectedEvent.image} alt="" className="event-banner-img" />
+                  {(selectedEvent as any).imageUrl || (selectedEvent as any).image ? (
+                     <img src={(selectedEvent as any).imageUrl || (selectedEvent as any).image} alt="" className="event-banner-img" />
                   ) : (
                      <div className="event-banner-img placeholder-img" />
                   )}
@@ -475,7 +482,7 @@ export default function Events() {
                         </p>
                      </div>
                      <div className="text-right">
-                        <p className="text-sm font-bold text-muted uppercase tracking-wider">Participants Estimés</p>
+                        <p className="text-sm font-bold text-muted uppercase tracking-wider">Participants estimés</p>
                         <p className="text-2xl font-black text-primary">{selectedEvent.attendees}</p>
                      </div>
                   </div>
@@ -523,8 +530,8 @@ export default function Events() {
                      </div>
                   )}
 
-                  <div className="modal-footer mt-10">
-                     <button className="btn btn-ghost" onClick={() => setSelectedEvent(null)}>Fermer</button>
+                  <div className="modal-footer mt-10 flex flex-wrap items-center justify-between gap-3">
+                     <button type="button" className="btn btn-ghost" onClick={() => setSelectedEvent(null)}>Fermer</button>
                      <div className="flex gap-3">
                         {selectedEvent.status === 'Pending' && (
                            <button className="btn btn-success" onClick={() => { notify('Événement approuvé'); setSelectedEvent(null); }}>

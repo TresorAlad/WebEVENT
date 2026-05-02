@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import { getDashboardStats, getTransactions, getRevenueGrowth } from '../services/api'
 import type { Transaction, DashboardStats, ChartDataPoint } from '../types'
+import Skeleton from '../components/ui/Skeleton'
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
@@ -18,6 +19,12 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     )
   }
   return null
+}
+
+function statutTransaction(label: string): string {
+  if (label === 'Completed') return 'Complété'
+  if (label === 'Pending') return 'En attente'
+  return label
 }
 
 export default function Financials() {
@@ -56,26 +63,28 @@ export default function Financials() {
   }, [search, transactions])
 
   if (loading || !stats) {
-    return <div className="p-8">Loading financial data...</div> // Or a more complex skeleton
+    return (
+      <div className="page-loading financials-page">
+        <Skeleton height={400} />
+      </div>
+    )
   }
 
   return (
     <div className="financials-page">
-      {/* Header */}
       <div className="page-header">
         <div className="page-header-info">
-          <h1>Financial Overview</h1>
-          <p>Track payments, payouts, and ecosystem revenue in Togo.</p>
+          <h1>Aperçu financier</h1>
+          <p>Suivez les paiements, les reversements et les revenus de l&apos;écosystème au Togo.</p>
         </div>
         <div className="page-header-actions">
-          <button className="btn btn-primary" id="export-finance-btn">
+          <button type="button" className="btn btn-primary" id="export-finance-btn">
             <Download size={15} />
-            Export Finance Report
+            Exporter le rapport financier
           </button>
         </div>
       </div>
 
-      {/* Financial Stats */}
       <div className="grid-3 mb-6">
         <div className="stat-card">
           <div className="stat-card-header">
@@ -86,9 +95,9 @@ export default function Financials() {
               <TrendingUp size={11} /> +{stats.growth}%
             </span>
           </div>
-          <p className="stat-card-label">TOTAL REVENUE (FCFA)</p>
+          <p className="stat-card-label">REVENU TOTAL (FCFA)</p>
           <p className="stat-card-value">{(stats.totalRevenue / 1000000).toFixed(1)}M</p>
-          <p className="text-xs text-muted mt-2">Cumulative revenue from ticket sales</p>
+          <p className="text-xs text-muted mt-2">Revenu cumulé issu de la vente de billets</p>
         </div>
 
         <div className="stat-card">
@@ -97,9 +106,9 @@ export default function Financials() {
               <CreditCard size={20} />
             </div>
           </div>
-          <p className="stat-card-label">TICKET SALES</p>
+          <p className="stat-card-label">BILLETS VENDUS</p>
           <p className="stat-card-value">{(stats.ticketSales / 1000).toFixed(1)}K</p>
-          <p className="text-xs text-muted mt-2">Total tickets sold across all events</p>
+          <p className="text-xs text-muted mt-2">Total des billets vendus sur tous les événements</p>
         </div>
 
         <div className="stat-card">
@@ -108,16 +117,15 @@ export default function Financials() {
               <RefreshCcw size={20} />
             </div>
           </div>
-          <p className="stat-card-label">ORGANIZER PAYOUTS</p>
+          <p className="stat-card-label">PAIEMENTS ORGANISATEURS</p>
           <p className="stat-card-value">{((stats.totalRevenue * 0.8) / 1000000).toFixed(1)}M</p>
-          <p className="text-xs text-muted mt-2">Estimated transfers (80% of revenue)</p>
+          <p className="text-xs text-muted mt-2">Transferts estimés (80 % du revenu)</p>
         </div>
       </div>
 
-      {/* Revenue Chart */}
       <div className="card mb-6">
-        <p className="chart-section-title">Revenue Trends</p>
-        <p className="text-xs text-muted mb-6">Monthly revenue performance across the platform</p>
+        <p className="chart-section-title">Tendances des revenus</p>
+        <p className="text-xs text-muted mb-6">Performance mensuelle des revenus sur la plateforme</p>
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={revenueByMonth} barCategoryGap="30%">
             <XAxis
@@ -133,48 +141,47 @@ export default function Financials() {
         </ResponsiveContainer>
       </div>
 
-      {/* Recent Transactions List with Search */}
       <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-        <div style={{ padding: 'var(--space-5) var(--space-6)', borderBottom: '1px solid var(--border-light)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <p className="chart-section-title">Recent Transactions</p>
+        <div style={{ padding: 'var(--space-5) var(--space-6)', borderBottom: '1px solid var(--border-light)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
+          <p className="chart-section-title">Transactions récentes</p>
           <div className="flex gap-3">
              <div className="topbar-search" style={{ maxWidth: 200 }}>
                 <Search size={14} className="topbar-search-icon" />
                 <input
                   type="text"
                   className="topbar-search-input"
-                  placeholder="Search tx..."
+                  placeholder="Rechercher une transaction…"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   style={{ padding: '6px 10px 6px 32px', height: 32 }}
                 />
              </div>
-             <button className="btn btn-ghost btn-sm btn-icon"><Filter size={14} /></button>
+             <button type="button" className="btn btn-ghost btn-sm btn-icon" aria-label="Filtres"><Filter size={14} /></button>
           </div>
         </div>
         <div className="table-wrap" style={{ border: 'none' }}>
           <table>
             <thead>
               <tr>
-                <th>Transaction ID</th>
-                <th>Event</th>
-                <th>Organizer</th>
-                <th>Amount (FCFA)</th>
+                <th>ID transaction</th>
+                <th>Événement</th>
+                <th>Organisateur</th>
+                <th>Montant (FCFA)</th>
                 <th>Date</th>
-                <th>Status</th>
+                <th>Statut</th>
               </tr>
             </thead>
             <tbody>
               {filteredTransactions.map((tx: Transaction) => (
                 <tr key={tx.id}>
-                  <td className="font-semibold text-primary">{tx.id.substring(0, 8)}...</td>
+                  <td className="font-semibold text-primary">{tx.id.substring(0, 8)}…</td>
                   <td className="font-medium">{tx.event}</td>
                   <td>{tx.organizer}</td>
                   <td className="font-bold">{(tx.amount).toLocaleString()}</td>
                   <td>{tx.date}</td>
                   <td>
                     <span className={`badge ${tx.status === 'Completed' ? 'badge-success' : tx.status === 'Pending' ? 'badge-warning' : 'badge-danger'}`}>
-                      {tx.status}
+                      {statutTransaction(tx.status)}
                     </span>
                   </td>
                 </tr>
@@ -182,7 +189,7 @@ export default function Financials() {
               {filteredTransactions.length === 0 && (
                 <tr>
                   <td colSpan={6} style={{ textAlign: 'center', padding: 'var(--space-8)', color: 'var(--text-muted)' }}>
-                    No transactions found
+                    Aucune transaction trouvée
                   </td>
                 </tr>
               )}

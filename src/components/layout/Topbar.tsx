@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Search, Bell, Moon, Sun, ChevronDown, User, Settings, LogOut } from 'lucide-react'
+import { Search, Bell, Moon, Sun, ChevronDown, User, Settings, LogOut, Shield } from 'lucide-react'
 import { useNotification } from '../ui/NotificationProvider'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
@@ -38,7 +38,7 @@ export default function Topbar() {
 
   const handleSignOut = async () => {
     await logout()
-    notify('Signed out successfully', 'info')
+    notify('Déconnexion réussie', 'info')
     navigate('/login')
   }
 
@@ -127,7 +127,7 @@ export default function Topbar() {
                 <Settings size={14} /> Paramètres Système
               </button>
               <button className="dropdown-item" onClick={() => notify('Centre de sécurité actif', 'info')}>
-                <Shield size={14} /> Centre de Sécurité
+                <Shield size={14} className="text-info" /> Centre de Sécurité
               </button>
               <div className="divider" />
               <button className="dropdown-item danger" onClick={handleSignOut}>
@@ -140,6 +140,3 @@ export default function Topbar() {
     </header>
   )
 }
-
-// Small helper since I used it above
-const Shield = ({ size }: { size: number }) => <span style={{ color: 'var(--info)' }}><Bell size={size} /></span>

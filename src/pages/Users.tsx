@@ -6,13 +6,25 @@ import Modal from '../components/ui/Modal'
 import Skeleton from '../components/ui/Skeleton'
 
 const PAGE_SIZE = 5
-type TabFilter = 'All Accounts' | 'Organizers' | 'Suspended'
+type TabFilter = 'tous' | 'organisateurs' | 'suspendus'
+
+const TAB_LABELS: Record<TabFilter, string> = {
+  tous: 'Tous les comptes',
+  organisateurs: 'Organisateurs',
+  suspendus: 'Suspendus',
+}
+
+function libelleStatut(status: User['status']): string {
+  if (status === 'Suspended') return 'Suspendu'
+  if (status === 'Active') return 'Actif'
+  return status
+}
 
 export default function Users() {
   const [users, setUsers] = useState<User[]>([])
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
-  const [tab, setTab] = useState<TabFilter>('All Accounts')
+  const [tab, setTab] = useState<TabFilter>('tous')
   const [page, setPage] = useState(1)
   const [openMenu, setOpenMenu] = useState<string | null>(null)
   const [searchVal] = useState('')
@@ -43,8 +55,8 @@ export default function Users() {
   const filtered = useMemo(() => {
     return users.filter(u => {
       const matchTab =
-        tab === 'All Accounts' ? true :
-        tab === 'Organizers' ? u.role === 'ORGANIZER' :
+        tab === 'tous' ? true :
+        tab === 'organisateurs' ? u.role === 'ORGANIZER' :
         u.status === 'Suspended'
       const matchSearch =
         u.name.toLowerCase().includes(searchVal.toLowerCase()) ||
@@ -69,24 +81,25 @@ export default function Users() {
       {/* Header */}
       <div className="page-header">
         <div className="page-header-info">
-          <h1>Account Management</h1>
-          <p>Oversee and manage your community of organizers and staff.</p>
+          <h1>Gestion des comptes</h1>
+          <p>Supervisez les organisateurs et le personnel de la plateforme.</p>
         </div>
         <div className="page-header-actions">
           <div className="tabs">
-            {(['All Accounts', 'Organizers', 'Suspended'] as TabFilter[]).map(t => (
+            {(['tous', 'organisateurs', 'suspendus'] as TabFilter[]).map(t => (
               <button
                 key={t}
+                type="button"
                 className={`tab-btn${tab === t ? ' active' : ''}`}
                 onClick={() => { setTab(t); setPage(1) }}
               >
-                {t}
+                {TAB_LABELS[t]}
               </button>
             ))}
           </div>
-          <button className="btn btn-outline" id="users-filter-btn">
+          <button type="button" className="btn btn-outline" id="users-filter-btn">
             <SlidersHorizontal size={15} />
-            Filters
+            Filtres
           </button>
         </div>
       </div>
@@ -97,10 +110,10 @@ export default function Users() {
           <table>
             <thead>
               <tr>
-                <th>Account</th>
-                <th>Email Address</th>
-                <th>Role</th>
-                <th>Status</th>
+                <th>Compte</th>
+                <th>E-mail</th>
+                <th>Rôle</th>
+                <th>Statut</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -129,7 +142,7 @@ export default function Users() {
                         )}
                         <div className="user-cell-info">
                           <p className="user-cell-name">{user.name}</p>
-                          <p className="user-cell-date">Joined {user.joinedAt}</p>
+                          <p className="user-cell-date">Inscrit le {user.joinedAt}</p>
                         </div>
                       </div>
                     </td>
@@ -138,7 +151,7 @@ export default function Users() {
                     <td>
                       <div className="status-cell">
                         <span className={`status-dot ${statusCls(user.status)}`} />
-                        <span className={`status-text ${statusCls(user.status)}`}>{user.status}</span>
+                        <span className={`status-text ${statusCls(user.status)}`}>{libelleStatut(user.status)}</span>
                       </div>
                     </td>
                     <td>
@@ -151,17 +164,17 @@ export default function Users() {
                         </button>
                         {openMenu === user.id && (
                           <div className="dropdown-menu" style={{ right: 'auto', left: 0 }}>
-                            <button className="dropdown-item" onClick={() => setSelectedUser(user)}>
-                              <Eye size={14} /> View Details
+                            <button type="button" className="dropdown-item" onClick={() => setSelectedUser(user)}>
+                              <Eye size={14} /> Voir le détail
                             </button>
-                            <button className="dropdown-item">
-                              <CheckCircle size={14} /> Activate
+                            <button type="button" className="dropdown-item">
+                              <CheckCircle size={14} /> Activer
                             </button>
-                            <button className="dropdown-item">
-                              <Ban size={14} /> Suspend
+                            <button type="button" className="dropdown-item">
+                              <Ban size={14} /> Suspendre
                             </button>
-                            <button className="dropdown-item danger">
-                              <AlertTriangle size={14} /> Remove
+                            <button type="button" className="dropdown-item danger">
+                              <AlertTriangle size={14} /> Retirer
                             </button>
                           </div>
                         )}
@@ -171,7 +184,7 @@ export default function Users() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={5} className="text-center py-10">No users found</td>
+                  <td colSpan={5} className="text-center py-10">Aucun utilisateur trouvé</td>
                 </tr>
               )}
             </tbody>
@@ -180,7 +193,7 @@ export default function Users() {
 
         <div className="pagination">
           <span className="pagination-info">
-            Showing {filtered.length > 0 ? (page - 1) * PAGE_SIZE + 1 : 0}–{Math.min(page * PAGE_SIZE, filtered.length)} of {filtered.length} results
+            {filtered.length > 0 ? (page - 1) * PAGE_SIZE + 1 : 0}–{Math.min(page * PAGE_SIZE, filtered.length)} sur {filtered.length} résultats
           </span>
           <div className="pagination-controls">
             <button
@@ -219,7 +232,7 @@ export default function Users() {
             </div>
           </div>
           <div>
-            <p className="stat-card-label">New This Week</p>
+            <p className="stat-card-label">Nouveaux cette semaine</p>
             <p className="stat-card-value">+{stats?.newUsersThisWeek || 0}</p>
           </div>
         </div>
@@ -230,7 +243,7 @@ export default function Users() {
             </div>
           </div>
           <div>
-            <p className="stat-card-label">Verified Organizers</p>
+            <p className="stat-card-label">Organisateurs vérifiés</p>
             <p className="stat-card-value">{stats?.verifiedOrganizers || 0}</p>
           </div>
         </div>
@@ -241,7 +254,7 @@ export default function Users() {
             </div>
           </div>
           <div>
-            <p className="stat-card-label">Pending Reviews</p>
+            <p className="stat-card-label">Modérations en attente</p>
             <p className="stat-card-value">{stats?.pendingReviews || 0}</p>
           </div>
         </div>
@@ -252,7 +265,7 @@ export default function Users() {
             </div>
           </div>
           <div>
-            <p className="stat-card-label">Suspended Accounts</p>
+            <p className="stat-card-label">Comptes suspendus</p>
             <p className="stat-card-value">{stats?.suspendedUsers || 0}</p>
           </div>
         </div>
@@ -262,7 +275,7 @@ export default function Users() {
       <Modal
         isOpen={!!selectedUser}
         onClose={() => setSelectedUser(null)}
-        title="Account Profile Details"
+        title="Détails du compte"
         size="md"
       >
         {selectedUser && (
@@ -278,18 +291,18 @@ export default function Users() {
                 <p className="text-muted">{selectedUser.email}</p>
                 <div className="flex gap-2 mt-2">
                   <span className={`badge ${roleBadgeClass(selectedUser.role)}`}>{selectedUser.role}</span>
-                  <span className={`badge ${statusCls(selectedUser.status)}`}>{selectedUser.status}</span>
+                  <span className={`badge ${statusCls(selectedUser.status)}`}>{libelleStatut(selectedUser.status)}</span>
                 </div>
               </div>
             </div>
 
             <div className="grid-2 gap-6">
               <div className="detail-group">
-                <p className="label">Registered On</p>
+                <p className="label">Inscription</p>
                 <p className="font-semibold">{selectedUser.joinedAt}</p>
               </div>
               <div className="detail-group">
-                <p className="label">Account ID</p>
+                <p className="label">Identifiant du compte</p>
                 <p className="font-semibold">{selectedUser.id}</p>
               </div>
             </div>
@@ -297,11 +310,11 @@ export default function Users() {
             <div className="divider" />
 
             <div className="modal-footer" style={{ margin: 'var(--space-6) -var(--space-6) -var(--space-6)' }}>
-              <button className="btn btn-ghost" onClick={() => setSelectedUser(null)}>Close</button>
+              <button type="button" className="btn btn-ghost" onClick={() => setSelectedUser(null)}>Fermer</button>
               {selectedUser.status === 'Active' ? (
-                <button className="btn btn-danger">Suspend Account</button>
+                <button type="button" className="btn btn-danger">Suspendre le compte</button>
               ) : (
-                <button className="btn btn-primary">Activate Account</button>
+                <button type="button" className="btn btn-primary">Activer le compte</button>
               )}
             </div>
           </div>

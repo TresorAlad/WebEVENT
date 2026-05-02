@@ -42,8 +42,8 @@ export default function Profile() {
     if (dbUser) {
       setFormData({
         name: dbUser.name || user?.displayName || '',
-        avatar: dbUser.avatar || user?.photoURL || AVATAR_OPTIONS[Math.floor(Math.random() * AVATAR_OPTIONS.length)],
-        bio: dbUser.bio || "Lomé tech ecosystem lead and lead developer for EventHub platform management."
+        avatar: dbUser.avatar || user?.photoURL || AVATAR_OPTIONS[0],
+        bio: dbUser.bio || "Responsable de la plateforme EventHub au Togo — pilotage des événements et de la communauté."
       })
     }
   }, [dbUser, user])
@@ -60,10 +60,10 @@ export default function Profile() {
     try {
       await updateProfile(formData)
       await refreshUser()
-      notify('Profile updated successfully!', 'success')
+      notify('Profil mis à jour !', 'success')
     } catch (error) {
       console.error('Failed to update profile', error)
-      notify('Failed to update profile. Please try again.', 'error')
+      notify('Impossible de mettre à jour le profil. Réessayez.', 'error')
     } finally {
       setSaving(false)
     }
@@ -78,8 +78,8 @@ export default function Profile() {
     <div className="profile-page">
       <div className="page-header">
         <div className="page-header-info">
-          <h1>Account Profile</h1>
-          <p>Update your personal information and account security.</p>
+          <h1>Profil du compte</h1>
+          <p>Mettez à jour vos informations personnelles et la sécurité du compte.</p>
         </div>
       </div>
 
@@ -94,7 +94,7 @@ export default function Profile() {
                 onClick={handleRandomAvatar}
                 className="absolute bottom-0 right-0 p-2 rounded-full shadow-lg border border-border hover:bg-bg transition-colors"
                 style={{ backgroundColor: 'var(--bg-card)' }}
-                title="Random Avatar"
+                title="Changer d&apos;avatar"
               >
                 <RefreshCw size={16} className="text-primary" />
               </button>
@@ -102,14 +102,14 @@ export default function Profile() {
             <div>
               <h2 className="text-2xl font-extrabold text-primary">{formData.name || 'Admin'}</h2>
               <p className="text-muted">ADMIN • Lomé, Togo</p>
-              <div className="badge badge-success mt-2">Verified ADMIN</div>
+              <div className="badge badge-success mt-2">Administrateur vérifié</div>
             </div>
           </div>
 
           <form className="settings-form" onSubmit={handleSave}>
             <div className="grid-2">
               <div className="form-group">
-                <label className="label">Full Name</label>
+                <label className="label">Nom complet</label>
                 <div className="flex items-center gap-3">
                   <User size={16} className="text-muted" />
                   <input
@@ -122,7 +122,7 @@ export default function Profile() {
                 </div>
               </div>
               <div className="form-group">
-                <label className="label">Public Username</label>
+                <label className="label">Identifiant public</label>
                 <input
                   type="text"
                   className="input"
@@ -144,7 +144,7 @@ export default function Profile() {
             </div>
 
             <div className="form-group mt-4">
-              <label className="label">Email Address</label>
+              <label className="label">Adresse e-mail</label>
               <div className="flex items-center gap-3">
                 <Mail size={16} className="text-muted" />
                 <input type="email" className="input" value={dbUser?.email || user?.email || ''} readOnly />
@@ -156,7 +156,7 @@ export default function Profile() {
             <div className="flex justify-end">
               <button type="submit" className="btn btn-primary" disabled={saving}>
                 {saving ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
-                {saving ? 'Saving...' : 'Save Profile Changes'}
+                {saving ? 'Enregistrement…' : 'Enregistrer les modifications'}
               </button>
             </div>
           </form>
@@ -167,28 +167,28 @@ export default function Profile() {
           <div className="card">
             <div className="flex items-center gap-3 mb-4">
               <Shield size={20} className="text-warning" />
-              <p className="font-bold">Security</p>
+              <p className="font-bold">Sécurité</p>
             </div>
             <div className="flex flex-col gap-4">
-              <button className="btn btn-outline w-full justify-start">
-                <Key size={14} /> Change Password
+              <button type="button" className="btn btn-outline w-full justify-start">
+                <Key size={14} /> Changer le mot de passe
               </button>
-              <button className="btn btn-outline w-full justify-start">
-                <Bell size={14} /> 2FA Setup
+              <button type="button" className="btn btn-outline w-full justify-start">
+                <Bell size={14} /> Authentification à deux facteurs
               </button>
             </div>
           </div>
 
           <div className="card">
-            <p className="label mb-2">Account Statistics</p>
+            <p className="label mb-2">Statistiques du compte</p>
             <div className="flex flex-col gap-3">
               <div className="flex justify-between text-sm">
-                <span className="text-muted">Total Events Approved</span>
-                <span className="font-bold">1,248</span>
+                <span className="text-muted">Événements approuvés (total)</span>
+                <span className="font-bold">1 248</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-muted">Moderation Score</span>
-                <span className="font-bold text-success">98.5%</span>
+                <span className="text-muted">Score de modération</span>
+                <span className="font-bold text-success">98,5 %</span>
               </div>
             </div>
           </div>

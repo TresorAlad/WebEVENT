@@ -74,25 +74,15 @@ export default function Login() {
         </div>
 
         {errorMsg && (
-          <div style={{ 
-            backgroundColor: '#fee2e2', 
-            color: '#dc2626', 
-            padding: '12px', 
-            borderRadius: '8px', 
-            marginBottom: '20px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            fontSize: '14px'
-          }}>
-            <AlertCircle size={16} />
+          <div className="alert-danger" role="alert">
+            <AlertCircle size={16} aria-hidden />
             <p>{errorMsg}</p>
           </div>
         )}
 
         <form className="login-form" onSubmit={handleLogin}>
           <div className="form-group">
-            <label className="label">Email Address</label>
+            <label className="label">Adresse e-mail</label>
             <div className="input-with-icon">
               <Mail className="input-icon" size={16} />
               <input
@@ -107,7 +97,7 @@ export default function Login() {
           </div>
 
           <div className="form-group">
-            <label className="label">Password</label>
+            <label className="label">Mot de passe</label>
             <div className="input-with-icon">
               <Lock className="input-icon" size={16} />
               <input
@@ -122,34 +112,32 @@ export default function Login() {
           </div>
 
           <button type="submit" className="btn btn-primary login-btn">
-            Connect to Console
+            Connexion à la console
             <ArrowRight size={16} />
           </button>
         </form>
 
-        <div className="divider" style={{ margin: '20px 0', textAlign: 'center', color: '#889' }}>
-          <span>OR</span>
+        <div className="login-or-divider">
+          <span>OU</span>
         </div>
 
         <button 
           onClick={handleGoogleLogin}
           disabled={signingIn || loading}
           type="button"
-          className="btn btn-outline login-btn" 
-          style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', opacity: signingIn || loading ? 0.6 : 1 }}
+          className="btn btn-outline login-btn login-google-btn w-full flex items-center justify-center gap-3"
         >
           <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" alt="Google" />
-          {signingIn || loading ? 'Connexion en cours...' : 'Sign in with Google'}
+          {signingIn || loading ? 'Connexion en cours...' : 'Connexion avec Google'}
         </button>
 
         {user && !loading && dbUser && dbUser.role !== 'ADMIN' && (
-          <div style={{ marginTop: '20px', color: '#b91c1c' }}>
+          <div className="login-access-denied">
             <p>Accès refusé : ce compte n'est pas administrateur.</p>
             <button
               type="button"
               onClick={logout}
-              className="btn btn-secondary"
-              style={{ marginTop: '10px' }}
+              className="btn btn-secondary mt-3"
             >
               Se déconnecter
             </button>
@@ -157,8 +145,8 @@ export default function Login() {
         )}
 
         <div className="login-footer">
-          <p>© 2026 EventHub Togo. All rights reserved.</p>
-          <p className="text-xs">Secure Admin Access Only</p>
+          <p>© 2026 EventHub Togo. Tous droits réservés.</p>
+          <p className="text-xs">Accès administrateur sécurisé uniquement</p>
         </div>
       </div>
 

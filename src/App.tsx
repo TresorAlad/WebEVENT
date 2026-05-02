@@ -14,7 +14,14 @@ import { useAuth } from './hooks/useAuth'
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, dbUser, loading } = useAuth()
   
-  if (loading) return <div>Loading...</div>
+  if (loading) {
+    return (
+      <div className="loading-screen" role="status" aria-live="polite">
+        <div className="spinner" aria-hidden />
+        <p className="text-sm text-secondary">Chargement de la console…</p>
+      </div>
+    )
+  }
   if (!user) return <Navigate to="/login" replace />
   if (!dbUser || dbUser.role !== 'ADMIN') return <Navigate to="/login" replace />
   

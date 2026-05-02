@@ -35,7 +35,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     return (
       <div className="chart-tooltip">
         <p className="chart-tooltip-label">{label}</p>
-        <p className="chart-tooltip-value">{payload[0].value.toLocaleString()} members</p>
+        <p className="chart-tooltip-value">{payload[0].value.toLocaleString()} membres</p>
       </div>
     )
   }
@@ -137,10 +137,10 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="card community-growth-card">
+        <div className="card user-growth-card">
           <div className="user-growth-header">
             <div>
-              <p className="community-growth-title">Croissance Communautaire</p>
+              <p className="user-growth-title">Croissance communautaire</p>
               <p className="text-xs text-muted" style={{ marginTop: 2 }}>
                 Tendances mensuelles d'acquisition à Lomé
               </p>
