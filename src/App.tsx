@@ -10,17 +10,13 @@ import Profile from './pages/Profile'
 import Login from './pages/Login'
 
 import { useAuth } from './hooks/useAuth'
+import AuthLoadingScreen from './components/layout/AuthLoadingScreen'
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, dbUser, loading } = useAuth()
   
   if (loading) {
-    return (
-      <div className="loading-screen" role="status" aria-live="polite">
-        <div className="spinner" aria-hidden />
-        <p className="text-sm text-secondary">Chargement de la console…</p>
-      </div>
-    )
+    return <AuthLoadingScreen />
   }
   if (!user) return <Navigate to="/login" replace />
   if (!dbUser || dbUser.role !== 'ADMIN') return <Navigate to="/login" replace />
