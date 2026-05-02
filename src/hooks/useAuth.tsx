@@ -57,6 +57,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   useEffect(() => {
+    const startTime = Date.now();
+    const MIN_LOADING_TIME = 2000; // 2 secondes de délai minimum
+
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       try {
         setUser(firebaseUser);
@@ -69,7 +72,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         console.error('Auth state sync failed:', error);
         setDbUser(null);
       } finally {
-        setLoading(false);
+        const elapsedTime = Date.now() - startTime;
+        const remainingTime = Math.max(0, MIN_LOADING_TIME - elapsedTime);
+        setTimeout(() => setLoading(false), remainingTime);
       }
     });
 
