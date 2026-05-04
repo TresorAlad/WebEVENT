@@ -1,13 +1,14 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, Calendar, Users, BarChart2,
-  DollarSign, Settings, HelpCircle, LogOut, Plus,
+  DollarSign, Settings, HelpCircle, LogOut, Plus, BadgeCheck,
 } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 
 const navItems = [
   { to: '/dashboard',  icon: LayoutDashboard, label: 'Tableau de Bord' },
   { to: '/events',     icon: Calendar,        label: 'Événements' },
+  { to: '/organizer-requests', icon: BadgeCheck, label: 'Demandes Organisateur' },
   { to: '/users',      icon: Users,           label: 'Gestion Admin' },
   { to: '/analytics',  icon: BarChart2,       label: 'Statistiques' },
   { to: '/financials', icon: DollarSign,      label: 'Finances' },

@@ -8,6 +8,7 @@ import Financials from './pages/Financials'
 import Settings from './pages/Settings'
 import Profile from './pages/Profile'
 import Login from './pages/Login'
+import OrganizerRequests from './pages/OrganizerRequests'
 
 import { useAuth } from './hooks/useAuth'
 import AuthLoadingScreen from './components/layout/AuthLoadingScreen'
@@ -42,6 +43,7 @@ function App() {
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="events" element={<Events />} />
+        <Route path="organizer-requests" element={<OrganizerRequests />} />
         <Route path="users" element={<Users />} />
         <Route path="analytics" element={<Analytics />} />
         <Route path="financials" element={<Financials />} />

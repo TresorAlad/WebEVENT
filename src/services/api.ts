@@ -79,6 +79,22 @@ export const getUsers = async () => {
   return unwrap(response.data);
 };
 
+export const getOrganizerRequests = async (status?: 'PENDING' | 'APPROVED' | 'REJECTED') => {
+  const q = status ? `?status=${encodeURIComponent(status)}` : '';
+  const response = await api.get(`/organizer-requests${q}`);
+  return unwrap(response.data);
+};
+
+export const approveOrganizerRequest = async (id: string) => {
+  const response = await api.post(`/organizer-requests/${encodeURIComponent(id)}/approve`);
+  return unwrap(response.data);
+};
+
+export const rejectOrganizerRequest = async (id: string) => {
+  const response = await api.post(`/organizer-requests/${encodeURIComponent(id)}/reject`);
+  return unwrap(response.data);
+};
+
 export const getTransactions = async () => {
   const response = await api.get('/admin/transactions');
   return unwrap(response.data);
